@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, MessageCircle, Navigation } from "lucide-react";
 import { MapView } from "@/components/MapView";
@@ -9,6 +9,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/hooks/useProfile";
 import { useReverseGeocode } from "@/hooks/useReverseGeocode";
 import { useLocationHistory } from "@/hooks/useLocationHistory";
+import { useLocationAlerts } from "@/hooks/useLocationAlerts";
 import { formatDistanceToNow } from "date-fns";
 
 interface SelectedUser {
@@ -35,16 +36,36 @@ const MapPage = () => {
   const { currentLocation, friendsLocations, isTracking } = useLocationTracking();
   const { getAddress, isLoading: isLoadingAddress } = useReverseGeocode();
   const { getLocationHistory, isLoading: isLoadingHistory } = useLocationHistory();
+  const { checkAlerts, requestNotificationPermission } = useLocationAlerts();
   const [mapCenter, setMapCenter] = useState<[number, number]>([-6.2088, 106.8456]);
   const [selectedUser, setSelectedUser] = useState<SelectedUser | null>(null);
   const [trail, setTrail] = useState<TrailPoint[]>([]);
   const [showingTrailFor, setShowingTrailFor] = useState<string | null>(null);
+  const lastCheckedRef = useRef<Map<string, string>>(new Map());
+
+  // Request notification permission on mount
+  useEffect(() => {
+    requestNotificationPermission();
+  }, []);
 
   useEffect(() => {
     if (currentLocation) {
       setMapCenter([currentLocation.coords.latitude, currentLocation.coords.longitude]);
     }
   }, [currentLocation]);
+
+  // Check location alerts when friends' locations update
+  useEffect(() => {
+    friendsLocations.forEach(loc => {
+      const lastUpdate = lastCheckedRef.current.get(loc.user_id);
+      
+      // Only check if location has changed
+      if (lastUpdate !== loc.updated_at) {
+        checkAlerts(loc.user_id, loc.latitude, loc.longitude);
+        lastCheckedRef.current.set(loc.user_id, loc.updated_at);
+      }
+    });
+  }, [friendsLocations, checkAlerts]);
 
   const calculateDistance = (lat1: number, lng1: number, lat2: number, lng2: number) => {
     const R = 6371;

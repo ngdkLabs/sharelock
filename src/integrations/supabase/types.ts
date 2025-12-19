@@ -65,6 +65,48 @@ export type Database = {
         }
         Relationships: []
       }
+      location_alerts: {
+        Row: {
+          created_at: string
+          friend_id: string
+          id: string
+          is_active: boolean
+          last_triggered_at: string | null
+          latitude: number
+          longitude: number
+          name: string
+          radius: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          friend_id: string
+          id?: string
+          is_active?: boolean
+          last_triggered_at?: string | null
+          latitude: number
+          longitude: number
+          name: string
+          radius?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          friend_id?: string
+          id?: string
+          is_active?: boolean
+          last_triggered_at?: string | null
+          latitude?: number
+          longitude?: number
+          name?: string
+          radius?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       location_history: {
         Row: {
           accuracy: number | null
