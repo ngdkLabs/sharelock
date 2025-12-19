@@ -14,11 +14,10 @@ export interface Message {
   location_lat?: number | null;
   location_lng?: number | null;
   location_address?: string | null;
-  audio_url?: string | null;
-  audio_duration?: number | null;
   reply_to_id?: string | null;
   reply_to_content?: string | null;
   reply_to_sender_name?: string | null;
+  reactions?: Record<string, string[]> | null;
 }
 
 export const useMessages = (friendId: string | null) => {
@@ -133,7 +132,7 @@ export const useMessages = (friendId: string | null) => {
 
       if (replyTo) {
         insertData.reply_to_id = replyTo.id;
-        insertData.reply_to_content = replyTo.content || (replyTo.image_url ? '📷 Gambar' : replyTo.audio_url ? '🎤 Pesan suara' : '📍 Lokasi');
+        insertData.reply_to_content = replyTo.content || (replyTo.image_url ? '📷 Gambar' : '📍 Lokasi');
         insertData.reply_to_sender_name = replyTo.sender_id === user.id ? 'Anda' : 'Teman';
       }
 
@@ -234,44 +233,54 @@ export const useMessages = (friendId: string | null) => {
     }
   };
 
-  // Send voice message
-  const sendVoiceMessage = async (audioBlob: Blob, duration: number) => {
-    if (!user || !friendId) return null;
+  // Add reaction to message
+  const addReaction = async (messageId: string, emoji: string) => {
+    if (!user) return;
 
     try {
-      const fileName = `${user.id}/${Date.now()}.webm`;
+      const message = messages.find(m => m.id === messageId);
+      if (!message) return;
+
+      const currentReactions = (message.reactions || {}) as Record<string, string[]>;
+      const emojiReactions = currentReactions[emoji] || [];
       
-      const { error: uploadError } = await supabase.storage
-        .from('voice-messages')
-        .upload(fileName, audioBlob);
-
-      if (uploadError) throw uploadError;
-
-      const { data: urlData } = supabase.storage
-        .from('voice-messages')
-        .getPublicUrl(fileName);
+      let newReactions: Record<string, string[]>;
+      
+      if (emojiReactions.includes(user.id)) {
+        // Remove reaction
+        newReactions = {
+          ...currentReactions,
+          [emoji]: emojiReactions.filter(id => id !== user.id)
+        };
+        // Clean up empty arrays
+        if (newReactions[emoji].length === 0) {
+          delete newReactions[emoji];
+        }
+      } else {
+        // Add reaction
+        newReactions = {
+          ...currentReactions,
+          [emoji]: [...emojiReactions, user.id]
+        };
+      }
 
       const { data, error } = await supabase
         .from('messages')
-        .insert({
-          sender_id: user.id,
-          receiver_id: friendId,
-          content: '🎤 Pesan suara',
-          audio_url: urlData.publicUrl,
-          audio_duration: duration
-        })
-        .select()
-        .single();
+        .update({ reactions: newReactions } as any)
+        .eq('id', messageId);
 
       if (error) throw error;
-      return data;
+
+      // Update local state
+      setMessages(prev => prev.map(m => 
+        m.id === messageId ? { ...m, reactions: newReactions } : m
+      ));
     } catch (error: any) {
       toast({
-        title: 'Gagal mengirim pesan suara',
+        title: 'Gagal menambah reaksi',
         description: error.message,
         variant: 'destructive'
       });
-      return null;
     }
   };
 
@@ -366,7 +375,7 @@ export const useMessages = (friendId: string | null) => {
     sendMessage,
     sendImageMessage,
     sendLocationMessage,
-    sendVoiceMessage,
+    addReaction,
     handleTyping,
     getUnreadCount,
     refetch: fetchMessages

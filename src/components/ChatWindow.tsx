@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { X, Send, Image, MapPin, Loader2, Check, CheckCheck, Mic, Square, Play, Pause, Smile, Reply, XCircle } from 'lucide-react';
+import { X, Send, Image, MapPin, Loader2, Check, CheckCheck, Smile, Reply, XCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -23,7 +23,10 @@ interface ChatWindowProps {
   onClose: () => void;
 }
 
-// Animated emoji data
+// Reaction emojis
+const reactionEmojis = ['❤️', '😂', '😮', '😢', '😡', '👍'];
+
+// Animated emoji data for text input
 const animatedEmojis = [
   { emoji: '❤️', animation: 'animate-bounce' },
   { emoji: '😂', animation: 'animate-bounce' },
@@ -45,21 +48,15 @@ const animatedEmojis = [
 
 const ChatWindow = ({ friendId, friendName, friendAvatar, onClose }: ChatWindowProps) => {
   const { user } = useAuth();
-  const { messages, loading, friendIsTyping, sendMessage, sendImageMessage, sendLocationMessage, sendVoiceMessage, handleTyping } = useMessages(friendId);
+  const { messages, loading, friendIsTyping, sendMessage, sendImageMessage, sendLocationMessage, addReaction, handleTyping } = useMessages(friendId);
   const { getAddress } = useReverseGeocode();
   const [newMessage, setNewMessage] = useState('');
   const [sending, setSending] = useState(false);
   const [sendingLocation, setSendingLocation] = useState(false);
-  const [isRecording, setIsRecording] = useState(false);
-  const [recordingTime, setRecordingTime] = useState(0);
-  const [playingAudio, setPlayingAudio] = useState<string | null>(null);
   const [replyTo, setReplyTo] = useState<Message | null>(null);
+  const [activeReactionMenu, setActiveReactionMenu] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const audioChunksRef = useRef<Blob[]>([]);
-  const recordingIntervalRef = useRef<NodeJS.Timeout | null>(null);
-  const audioRefs = useRef<{ [key: string]: HTMLAudioElement }>({});
 
   // Scroll to bottom on new messages
   useEffect(() => {
@@ -97,6 +94,11 @@ const ChatWindow = ({ friendId, friendName, friendAvatar, onClose }: ChatWindowP
 
   const handleReply = (message: Message) => {
     setReplyTo(message);
+  };
+
+  const handleReaction = async (messageId: string, emoji: string) => {
+    await addReaction(messageId, emoji);
+    setActiveReactionMenu(null);
   };
 
   const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -147,85 +149,21 @@ const ChatWindow = ({ friendId, friendName, friendAvatar, onClose }: ChatWindowP
     );
   };
 
-  const startRecording = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream);
-      mediaRecorderRef.current = mediaRecorder;
-      audioChunksRef.current = [];
-
-      mediaRecorder.ondataavailable = (e) => {
-        if (e.data.size > 0) {
-          audioChunksRef.current.push(e.data);
-        }
-      };
-
-      mediaRecorder.onstop = async () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-        stream.getTracks().forEach(track => track.stop());
-        
-        if (audioBlob.size > 0) {
-          setSending(true);
-          await sendVoiceMessage(audioBlob, recordingTime);
-          setSending(false);
-        }
-        setRecordingTime(0);
-      };
-
-      mediaRecorder.start();
-      setIsRecording(true);
-
-      recordingIntervalRef.current = setInterval(() => {
-        setRecordingTime(prev => prev + 1);
-      }, 1000);
-    } catch (error) {
-      toast.error('Tidak dapat mengakses mikrofon');
-    }
-  };
-
-  const stopRecording = () => {
-    if (mediaRecorderRef.current && isRecording) {
-      mediaRecorderRef.current.stop();
-      setIsRecording(false);
-      if (recordingIntervalRef.current) {
-        clearInterval(recordingIntervalRef.current);
-      }
-    }
-  };
-
-  const formatDuration = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
-
-  const toggleAudioPlay = (audioUrl: string, messageId: string) => {
-    if (!audioRefs.current[messageId]) {
-      audioRefs.current[messageId] = new Audio(audioUrl);
-      audioRefs.current[messageId].onended = () => setPlayingAudio(null);
-    }
-
-    const audio = audioRefs.current[messageId];
-
-    if (playingAudio === messageId) {
-      audio.pause();
-      setPlayingAudio(null);
-    } else {
-      Object.values(audioRefs.current).forEach(a => a.pause());
-      audio.play();
-      setPlayingAudio(messageId);
-    }
-  };
-
   const openLocationInMap = (lat: number, lng: number) => {
     window.open(`https://www.google.com/maps?q=${lat},${lng}`, '_blank');
   };
 
   const getMessagePreview = (msg: Message) => {
     if (msg.image_url) return '📷 Gambar';
-    if (msg.audio_url) return '🎤 Pesan suara';
     if (msg.location_lat) return '📍 Lokasi';
     return msg.content.length > 50 ? msg.content.substring(0, 50) + '...' : msg.content;
+  };
+
+  const getReactionCounts = (reactions: Record<string, string[]> | null | undefined) => {
+    if (!reactions) return [];
+    return Object.entries(reactions)
+      .filter(([_, users]) => users.length > 0)
+      .map(([emoji, users]) => ({ emoji, count: users.length, hasMyReaction: user ? users.includes(user.id) : false }));
   };
 
   return (
@@ -278,8 +216,8 @@ const ChatWindow = ({ friendId, friendName, friendAvatar, onClose }: ChatWindowP
               const isMine = msg.sender_id === user?.id;
               const hasLocation = msg.location_lat && msg.location_lng;
               const hasImage = msg.image_url;
-              const hasAudio = msg.audio_url;
               const hasReply = msg.reply_to_id;
+              const reactions = getReactionCounts(msg.reactions as Record<string, string[]> | null);
 
               return (
                 <div
@@ -298,103 +236,121 @@ const ChatWindow = ({ friendId, friendName, friendAvatar, onClose }: ChatWindowP
                     </Button>
                   )}
 
-                  <div
-                    className={`max-w-[75%] rounded-2xl overflow-hidden ${
-                      isMine
-                        ? 'bg-primary text-primary-foreground rounded-br-sm'
-                        : 'bg-muted rounded-bl-sm'
-                    }`}
-                  >
-                    {/* Reply preview */}
-                    {hasReply && (
-                      <div className={`px-3 py-2 border-l-2 ${isMine ? 'border-primary-foreground/50 bg-primary-foreground/10' : 'border-primary bg-primary/10'}`}>
-                        <p className={`text-[10px] font-medium ${isMine ? 'text-primary-foreground/70' : 'text-primary'}`}>
-                          {msg.reply_to_sender_name}
-                        </p>
-                        <p className={`text-xs truncate ${isMine ? 'text-primary-foreground/60' : 'text-muted-foreground'}`}>
-                          {msg.reply_to_content}
-                        </p>
-                      </div>
-                    )}
-
-                    {/* Image message */}
-                    {hasImage && (
-                      <img 
-                        src={msg.image_url!} 
-                        alt="Shared image" 
-                        className="max-w-full max-h-64 object-cover cursor-pointer"
-                        onClick={() => window.open(msg.image_url!, '_blank')}
-                      />
-                    )}
-
-                    {/* Voice message */}
-                    {hasAudio && (
-                      <div className="px-4 py-3 flex items-center gap-3">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className={`h-10 w-10 rounded-full ${isMine ? 'hover:bg-primary-foreground/20' : 'hover:bg-background'}`}
-                          onClick={() => toggleAudioPlay(msg.audio_url!, msg.id)}
-                        >
-                          {playingAudio === msg.id ? (
-                            <Pause className="h-5 w-5" />
-                          ) : (
-                            <Play className="h-5 w-5" />
-                          )}
-                        </Button>
-                        <div className="flex-1">
-                          <div className={`h-1 rounded-full ${isMine ? 'bg-primary-foreground/30' : 'bg-foreground/20'}`}>
-                            <motion.div 
-                              className={`h-full rounded-full ${isMine ? 'bg-primary-foreground' : 'bg-primary'}`}
-                              initial={{ width: '0%' }}
-                              animate={{ width: playingAudio === msg.id ? '100%' : '0%' }}
-                              transition={{ duration: msg.audio_duration || 5 }}
-                            />
-                          </div>
+                  <div className="relative">
+                    <div
+                      className={`max-w-[75%] rounded-2xl overflow-hidden ${
+                        isMine
+                          ? 'bg-primary text-primary-foreground rounded-br-sm'
+                          : 'bg-muted rounded-bl-sm'
+                      }`}
+                      onDoubleClick={() => setActiveReactionMenu(activeReactionMenu === msg.id ? null : msg.id)}
+                    >
+                      {/* Reply preview */}
+                      {hasReply && (
+                        <div className={`px-3 py-2 border-l-2 ${isMine ? 'border-primary-foreground/50 bg-primary-foreground/10' : 'border-primary bg-primary/10'}`}>
+                          <p className={`text-[10px] font-medium ${isMine ? 'text-primary-foreground/70' : 'text-primary'}`}>
+                            {msg.reply_to_sender_name}
+                          </p>
+                          <p className={`text-xs truncate ${isMine ? 'text-primary-foreground/60' : 'text-muted-foreground'}`}>
+                            {msg.reply_to_content}
+                          </p>
                         </div>
-                        <span className="text-xs opacity-70">
-                          {formatDuration(msg.audio_duration || 0)}
-                        </span>
-                      </div>
-                    )}
-
-                    {/* Location message */}
-                    {hasLocation && (
-                      <div 
-                        className="px-4 py-3 cursor-pointer"
-                        onClick={() => openLocationInMap(msg.location_lat!, msg.location_lng!)}
-                      >
-                        <div className="flex items-center gap-2 text-sm font-medium">
-                          <MapPin className="w-5 h-5" />
-                          <span>📍 Lokasi Dibagikan</span>
-                        </div>
-                        {msg.location_address && (
-                          <p className="text-xs opacity-80 mt-1 ml-7">{msg.location_address}</p>
-                        )}
-                        <p className="text-xs opacity-60 mt-1 ml-7 underline">Buka di Google Maps</p>
-                      </div>
-                    )}
-
-                    {/* Text content */}
-                    {msg.content && !hasLocation && !hasAudio && (
-                      <div className="px-4 py-2">
-                        <p className="text-sm whitespace-pre-wrap break-words">{msg.content}</p>
-                      </div>
-                    )}
-
-                    {/* Timestamp and read receipt */}
-                    <div className={`flex items-center gap-1 px-4 pb-2 ${isMine ? 'justify-end' : ''}`}>
-                      <p className={`text-[10px] ${isMine ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>
-                        {format(new Date(msg.created_at), 'HH:mm', { locale: id })}
-                      </p>
-                      {isMine && (
-                        msg.is_read ? (
-                          <CheckCheck className={`w-3.5 h-3.5 ${isMine ? 'text-primary-foreground/70' : 'text-muted-foreground'}`} />
-                        ) : (
-                          <Check className={`w-3.5 h-3.5 ${isMine ? 'text-primary-foreground/70' : 'text-muted-foreground'}`} />
-                        )
                       )}
+
+                      {/* Image message */}
+                      {hasImage && (
+                        <img 
+                          src={msg.image_url!} 
+                          alt="Shared image" 
+                          className="max-w-full max-h-64 object-cover cursor-pointer"
+                          onClick={() => window.open(msg.image_url!, '_blank')}
+                        />
+                      )}
+
+                      {/* Location message */}
+                      {hasLocation && (
+                        <div 
+                          className="px-4 py-3 cursor-pointer"
+                          onClick={() => openLocationInMap(msg.location_lat!, msg.location_lng!)}
+                        >
+                          <div className="flex items-center gap-2 text-sm font-medium">
+                            <MapPin className="w-5 h-5" />
+                            <span>📍 Lokasi Dibagikan</span>
+                          </div>
+                          {msg.location_address && (
+                            <p className="text-xs opacity-80 mt-1 ml-7">{msg.location_address}</p>
+                          )}
+                          <p className="text-xs opacity-60 mt-1 ml-7 underline">Buka di Google Maps</p>
+                        </div>
+                      )}
+
+                      {/* Text content */}
+                      {msg.content && !hasLocation && (
+                        <div className="px-4 py-2">
+                          <p className="text-sm whitespace-pre-wrap break-words">{msg.content}</p>
+                        </div>
+                      )}
+
+                      {/* Timestamp and read receipt */}
+                      <div className={`flex items-center gap-1 px-4 pb-2 ${isMine ? 'justify-end' : ''}`}>
+                        <p className={`text-[10px] ${isMine ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>
+                          {format(new Date(msg.created_at), 'HH:mm', { locale: id })}
+                        </p>
+                        {isMine && (
+                          msg.is_read ? (
+                            <CheckCheck className={`w-3.5 h-3.5 ${isMine ? 'text-primary-foreground/70' : 'text-muted-foreground'}`} />
+                          ) : (
+                            <Check className={`w-3.5 h-3.5 ${isMine ? 'text-primary-foreground/70' : 'text-muted-foreground'}`} />
+                          )
+                        )}
+                      </div>
                     </div>
+
+                    {/* Reactions display */}
+                    {reactions.length > 0 && (
+                      <div className={`absolute -bottom-3 ${isMine ? 'right-2' : 'left-2'} flex gap-0.5`}>
+                        {reactions.map(({ emoji, count, hasMyReaction }) => (
+                          <motion.button
+                            key={emoji}
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            className={`flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-xs ${
+                              hasMyReaction 
+                                ? 'bg-primary/20 border border-primary/50' 
+                                : 'bg-muted border border-border'
+                            }`}
+                            onClick={() => handleReaction(msg.id, emoji)}
+                          >
+                            <span>{emoji}</span>
+                            {count > 1 && <span className="text-muted-foreground">{count}</span>}
+                          </motion.button>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Reaction picker */}
+                    <AnimatePresence>
+                      {activeReactionMenu === msg.id && (
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.8, y: 10 }}
+                          animate={{ opacity: 1, scale: 1, y: 0 }}
+                          exit={{ opacity: 0, scale: 0.8, y: 10 }}
+                          className={`absolute -top-10 ${isMine ? 'right-0' : 'left-0'} flex gap-1 p-1.5 bg-card rounded-full shadow-lg border z-10`}
+                        >
+                          {reactionEmojis.map((emoji) => (
+                            <motion.button
+                              key={emoji}
+                              whileHover={{ scale: 1.3 }}
+                              whileTap={{ scale: 0.9 }}
+                              className="text-lg p-1 hover:bg-muted rounded-full transition-colors"
+                              onClick={() => handleReaction(msg.id, emoji)}
+                            >
+                              {emoji}
+                            </motion.button>
+                          ))}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
 
                   {/* Reply button - right side for my messages */}
@@ -476,33 +432,6 @@ const ChatWindow = ({ friendId, friendName, friendAvatar, onClose }: ChatWindowP
 
       {/* Input */}
       <div className="p-4 border-t bg-card">
-        {/* Recording indicator */}
-        <AnimatePresence>
-          {isRecording && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 10 }}
-              className="flex items-center justify-center gap-3 mb-3 p-3 bg-destructive/10 rounded-xl"
-            >
-              <motion.div
-                className="w-3 h-3 bg-destructive rounded-full"
-                animate={{ scale: [1, 1.2, 1] }}
-                transition={{ repeat: Infinity, duration: 1 }}
-              />
-              <span className="text-sm font-medium">Merekam... {formatDuration(recordingTime)}</span>
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={stopRecording}
-              >
-                <Square className="h-4 w-4 mr-1" />
-                Kirim
-              </Button>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
         <div className="flex gap-2 items-center">
           {/* Emoji picker */}
           <Popover>
@@ -548,7 +477,7 @@ const ChatWindow = ({ friendId, friendName, friendAvatar, onClose }: ChatWindowP
             variant="ghost" 
             size="icon"
             onClick={() => fileInputRef.current?.click()}
-            disabled={sending || isRecording}
+            disabled={sending}
           >
             <Image className="h-5 w-5" />
           </Button>
@@ -558,24 +487,13 @@ const ChatWindow = ({ friendId, friendName, friendAvatar, onClose }: ChatWindowP
             variant="ghost" 
             size="icon"
             onClick={handleShareLocation}
-            disabled={sendingLocation || sending || isRecording}
+            disabled={sendingLocation || sending}
           >
             {sendingLocation ? (
               <Loader2 className="h-5 w-5 animate-spin" />
             ) : (
               <MapPin className="h-5 w-5" />
             )}
-          </Button>
-
-          {/* Voice message */}
-          <Button 
-            variant="ghost" 
-            size="icon"
-            onClick={isRecording ? stopRecording : startRecording}
-            disabled={sending}
-            className={isRecording ? 'text-destructive' : ''}
-          >
-            <Mic className="h-5 w-5" />
           </Button>
 
           {/* Text input */}
@@ -585,9 +503,9 @@ const ChatWindow = ({ friendId, friendName, friendAvatar, onClose }: ChatWindowP
             onKeyPress={handleKeyPress}
             placeholder="Ketik pesan..."
             className="flex-1"
-            disabled={sending || isRecording}
+            disabled={sending}
           />
-          <Button onClick={handleSend} disabled={!newMessage.trim() || sending || isRecording}>
+          <Button onClick={handleSend} disabled={!newMessage.trim() || sending}>
             <Send className="h-4 w-4" />
           </Button>
         </div>
