@@ -142,7 +142,11 @@ export type Database = {
           content: string
           created_at: string
           id: string
+          image_url: string | null
           is_read: boolean
+          location_address: string | null
+          location_lat: number | null
+          location_lng: number | null
           receiver_id: string
           sender_id: string
         }
@@ -150,7 +154,11 @@ export type Database = {
           content: string
           created_at?: string
           id?: string
+          image_url?: string | null
           is_read?: boolean
+          location_address?: string | null
+          location_lat?: number | null
+          location_lng?: number | null
           receiver_id: string
           sender_id: string
         }
@@ -158,7 +166,11 @@ export type Database = {
           content?: string
           created_at?: string
           id?: string
+          image_url?: string | null
           is_read?: boolean
+          location_address?: string | null
+          location_lat?: number | null
+          location_lng?: number | null
           receiver_id?: string
           sender_id?: string
         }
