@@ -21,7 +21,7 @@ export const BottomNavigation = () => {
       className="fixed bottom-0 left-0 right-0 z-50 pb-safe pointer-events-none"
     >
       <div className="mx-4 mb-4 pointer-events-auto">
-        <div className="bg-card/95 backdrop-blur-xl rounded-2xl p-2 flex justify-around items-center shadow-card border border-border/50">
+        <div className="bg-card rounded-2xl p-1.5 flex justify-around items-center shadow-elevated border border-border/50">
           {navItems.map((item) => {
             const isActive = location.pathname === item.path;
             const Icon = item.icon;
@@ -32,8 +32,10 @@ export const BottomNavigation = () => {
                 whileTap={{ scale: 0.9 }}
                 onClick={() => navigate(item.path)}
                 className={cn(
-                  "relative flex flex-col items-center gap-1 px-4 py-2 rounded-xl transition-colors",
-                  isActive ? "text-primary" : "text-muted-foreground hover:text-foreground"
+                  "relative flex flex-col items-center gap-0.5 px-5 py-2 rounded-xl transition-all",
+                  isActive 
+                    ? "text-primary" 
+                    : "text-muted-foreground hover:text-foreground"
                 )}
               >
                 {isActive && (
@@ -43,8 +45,16 @@ export const BottomNavigation = () => {
                     transition={{ type: "spring", stiffness: 500, damping: 30 }}
                   />
                 )}
-                <Icon className={cn("w-5 h-5 relative z-10", isActive && "text-primary")} />
-                <span className="text-xs font-medium relative z-10">{item.label}</span>
+                <Icon className={cn(
+                  "w-5 h-5 relative z-10 transition-colors",
+                  isActive && "text-primary"
+                )} />
+                <span className={cn(
+                  "text-[10px] font-medium relative z-10",
+                  isActive && "text-primary font-semibold"
+                )}>
+                  {item.label}
+                </span>
               </motion.button>
             );
           })}

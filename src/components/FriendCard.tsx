@@ -35,12 +35,11 @@ export const FriendCard = ({
 }: FriendCardProps) => {
   return (
     <motion.div
-      initial={{ opacity: 0, x: -20 }}
-      animate={{ opacity: 1, x: 0 }}
-      whileHover={{ scale: 1.01 }}
-      whileTap={{ scale: 0.99 }}
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      whileTap={{ scale: 0.98 }}
       className={cn(
-        "glass rounded-2xl p-4 flex items-center gap-4 cursor-pointer transition-shadow hover:shadow-card",
+        "bg-card rounded-2xl p-4 flex items-center gap-4 cursor-pointer shadow-soft border border-border/50 transition-all hover:shadow-card",
         className
       )}
     >
@@ -56,13 +55,15 @@ export const FriendCard = ({
         <div className="flex items-center gap-2">
           <h3 className="font-semibold text-foreground truncate">{name}</h3>
           {isOnline && (
-            <span className="text-xs text-teal font-medium px-2 py-0.5 bg-teal/10 rounded-full">Live</span>
+            <span className="text-xs text-primary font-medium px-2 py-0.5 bg-primary/10 rounded-full">
+              Live
+            </span>
           )}
         </div>
         
         {location && (
-          <div className="flex items-center gap-1 mt-1 text-sm text-muted-foreground">
-            <MapPin className="w-3 h-3" />
+          <div className="flex items-center gap-1.5 mt-1 text-sm text-muted-foreground">
+            <MapPin className="w-3.5 h-3.5 text-primary" />
             <span className="truncate">{location}</span>
           </div>
         )}
@@ -79,8 +80,8 @@ export const FriendCard = ({
 
       <div className="flex items-center gap-2">
         <Button
-          variant="gradient"
           size="icon"
+          className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl h-10 w-10 shadow-glow-green"
           onClick={(e) => {
             e.stopPropagation();
             onLocate?.();
@@ -93,18 +94,19 @@ export const FriendCard = ({
             <Button
               variant="ghost"
               size="icon"
+              className="h-10 w-10 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted"
               onClick={(e) => e.stopPropagation()}
             >
               <MoreVertical className="w-4 h-4" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="glass">
+          <DropdownMenuContent align="end" className="bg-card border border-border shadow-elevated rounded-xl">
             <DropdownMenuItem 
               onClick={(e) => {
                 e.stopPropagation();
                 onRemove?.();
               }}
-              className="text-destructive focus:text-destructive"
+              className="text-destructive focus:text-destructive rounded-lg"
             >
               <Trash2 className="w-4 h-4 mr-2" />
               Remove Friend

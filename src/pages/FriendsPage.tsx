@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Search, MapPin, Trash2, Loader2 } from "lucide-react";
+import { Search, MapPin, Loader2, Users } from "lucide-react";
 import { FriendCard } from "@/components/FriendCard";
 import { BottomNavigation } from "@/components/BottomNavigation";
 import { Input } from "@/components/ui/input";
@@ -56,14 +56,18 @@ const FriendsPage = () => {
 
   return (
     <div className="min-h-screen bg-background pb-24">
-      <div className="px-4 py-6 space-y-6">
-        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
-          <h1 className="text-2xl font-bold text-foreground">Friends</h1>
-          <p className="text-muted-foreground">
+      {/* Header */}
+      <div className="bg-card border-b border-border px-4 py-4 sticky top-0 z-40">
+        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
+          <h1 className="text-xl font-bold text-foreground">Friends</h1>
+          <p className="text-sm text-muted-foreground">
             {friends.length} connection{friends.length !== 1 ? "s" : ""}
           </p>
         </motion.div>
+      </div>
 
+      <div className="px-4 py-4 space-y-4">
+        {/* Search */}
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
           <div className="relative">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
@@ -71,31 +75,33 @@ const FriendsPage = () => {
               placeholder="Search friends..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pl-12 h-12 rounded-xl bg-muted border-0"
+              className="pl-12 h-12 rounded-xl bg-muted border-0 focus-visible:ring-primary"
             />
           </div>
         </motion.div>
 
         {loading ? (
-          <div className="flex items-center justify-center py-12">
+          <div className="flex items-center justify-center py-16">
             <Loader2 className="w-8 h-8 animate-spin text-primary" />
           </div>
         ) : friendsWithLocations.length === 0 ? (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="text-center py-12"
+            className="text-center py-16"
           >
-            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
-              <MapPin className="w-8 h-8 text-muted-foreground" />
+            <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center">
+              <Users className="w-10 h-10 text-primary" />
             </div>
-            <p className="text-muted-foreground">
+            <h3 className="text-lg font-semibold text-foreground mb-1">
               {search ? "No friends found" : "No friends yet"}
+            </h3>
+            <p className="text-muted-foreground text-sm mb-4">
+              {search ? "Try a different search term" : "Invite your friends to connect"}
             </p>
             {!search && (
               <Button
-                variant="gradient"
-                className="mt-4"
+                className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-glow-green"
                 onClick={() => navigate("/invite")}
               >
                 Add Friends
@@ -107,9 +113,9 @@ const FriendsPage = () => {
             {friendsWithLocations.map((friend, i) => (
               <motion.div
                 key={friend.id}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.1 + i * 0.05 }}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.05 + i * 0.03 }}
               >
                 <FriendCard
                   name={friend.profile.full_name || friend.profile.username}
@@ -128,7 +134,7 @@ const FriendsPage = () => {
       </div>
 
       <AlertDialog open={!!deleteConfirm} onOpenChange={() => setDeleteConfirm(null)}>
-        <AlertDialogContent className="glass">
+        <AlertDialogContent className="bg-card border border-border shadow-elevated rounded-2xl">
           <AlertDialogHeader>
             <AlertDialogTitle>Remove Friend</AlertDialogTitle>
             <AlertDialogDescription>
@@ -136,10 +142,10 @@ const FriendsPage = () => {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel className="rounded-xl">Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => deleteConfirm && handleRemoveFriend(deleteConfirm)}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-xl"
             >
               Remove
             </AlertDialogAction>

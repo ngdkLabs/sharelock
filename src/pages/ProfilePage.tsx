@@ -44,7 +44,6 @@ const ProfilePage = () => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validate file type - only allow safe image formats (no SVG due to XSS risk)
     const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'];
     const allowedExtensions = ['.jpg', '.jpeg', '.png', '.webp'];
     const fileExtension = '.' + file.name.split('.').pop()?.toLowerCase();
@@ -107,25 +106,25 @@ const ProfilePage = () => {
 
   return (
     <div className="min-h-screen bg-background pb-24">
-      <div className="px-4 py-6 space-y-6">
-        {/* Header */}
-        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="text-center space-y-4">
+      {/* Header */}
+      <div className="bg-card border-b border-border px-4 py-6 sticky top-0 z-40">
+        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="text-center space-y-4">
           <div className="relative inline-block">
             <button onClick={handleAvatarClick} className="relative group">
               {profile?.avatar_url ? (
                 <img
                   src={profile.avatar_url}
                   alt={profile.username}
-                  className="w-24 h-24 rounded-full object-cover border-4 border-primary"
+                  className="w-20 h-20 rounded-full object-cover border-4 border-primary"
                 />
               ) : (
                 <UserAvatar name={profile?.username || "User"} size="xl" showRing />
               )}
-              <div className="absolute inset-0 rounded-full bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+              <div className="absolute inset-0 rounded-full bg-foreground/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                 {isUploading ? (
-                  <Loader2 className="w-6 h-6 text-white animate-spin" />
+                  <Loader2 className="w-6 h-6 text-card animate-spin" />
                 ) : (
-                  <Camera className="w-6 h-6 text-white" />
+                  <Camera className="w-6 h-6 text-card" />
                 )}
               </div>
             </button>
@@ -139,20 +138,20 @@ const ProfilePage = () => {
           </div>
           <div>
             <div className="flex items-center justify-center gap-2">
-              <h1 className="text-2xl font-bold text-foreground">
+              <h1 className="text-xl font-bold text-foreground">
                 {profile?.full_name || profile?.username}
               </h1>
               <button onClick={handleEditOpen} className="text-muted-foreground hover:text-foreground">
                 <Edit2 className="w-4 h-4" />
               </button>
             </div>
-            <p className="text-muted-foreground">@{profile?.username}</p>
+            <p className="text-sm text-muted-foreground">@{profile?.username}</p>
           </div>
           <div className="flex items-center justify-center gap-2 text-sm">
             {profile?.is_sharing_location ? (
               <>
-                <MapPin className="w-4 h-4 text-teal" />
-                <span className="text-teal">Location sharing active</span>
+                <MapPin className="w-4 h-4 text-primary" />
+                <span className="text-primary font-medium">Location sharing active</span>
               </>
             ) : (
               <>
@@ -162,15 +161,17 @@ const ProfilePage = () => {
             )}
           </div>
         </motion.div>
+      </div>
 
+      <div className="px-4 py-4 space-y-4">
         {/* Quick Stats */}
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="grid grid-cols-2 gap-3">
-          <div className="glass rounded-2xl p-4 text-center">
-            <p className="text-2xl font-bold gradient-text">{friends.length}</p>
+          <div className="bg-card rounded-2xl p-4 text-center shadow-soft border border-border/50">
+            <p className="text-2xl font-bold text-primary">{friends.length}</p>
             <p className="text-xs text-muted-foreground">Friends</p>
           </div>
-          <div className="glass rounded-2xl p-4 text-center">
-            <p className="text-2xl font-bold gradient-text-warm">
+          <div className="bg-card rounded-2xl p-4 text-center shadow-soft border border-border/50">
+            <p className="text-2xl font-bold text-primary">
               {profile?.is_sharing_location ? "On" : "Off"}
             </p>
             <p className="text-xs text-muted-foreground">Sharing</p>
@@ -180,10 +181,10 @@ const ProfilePage = () => {
         {/* Settings */}
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="space-y-3">
           <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Settings</h2>
-          <div className="glass rounded-2xl divide-y divide-border">
+          <div className="bg-card rounded-2xl divide-y divide-border shadow-soft border border-border/50">
             <div className="flex items-center justify-between p-4">
               <div className="flex items-center gap-3">
-                <MapPin className="w-5 h-5 text-muted-foreground" />
+                <MapPin className="w-5 h-5 text-primary" />
                 <span className="font-medium text-foreground">Share Location</span>
               </div>
               <Switch 
@@ -216,14 +217,14 @@ const ProfilePage = () => {
         </motion.div>
 
         {/* Account info */}
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="glass rounded-2xl p-4">
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="bg-card rounded-2xl p-4 shadow-soft border border-border/50">
           <p className="text-xs text-muted-foreground">Signed in as</p>
           <p className="text-sm font-medium text-foreground">{user?.email}</p>
         </motion.div>
 
         <Button 
           variant="outline" 
-          className="w-full h-12 text-destructive border-destructive/30 hover:bg-destructive/10"
+          className="w-full h-12 text-destructive border-destructive/30 hover:bg-destructive/10 rounded-xl"
           onClick={handleSignOut}
         >
           <LogOut className="w-5 h-5" />
@@ -233,7 +234,7 @@ const ProfilePage = () => {
 
       {/* Edit Profile Dialog */}
       <Dialog open={isEditing} onOpenChange={setIsEditing}>
-        <DialogContent className="glass">
+        <DialogContent className="bg-card border border-border shadow-elevated rounded-2xl">
           <DialogHeader>
             <DialogTitle>Edit Profile</DialogTitle>
           </DialogHeader>
@@ -243,7 +244,7 @@ const ProfilePage = () => {
               <Input
                 value={editForm.username}
                 onChange={(e) => setEditForm({ ...editForm, username: e.target.value })}
-                className="mt-1"
+                className="mt-1 rounded-xl"
               />
             </div>
             <div>
@@ -251,10 +252,10 @@ const ProfilePage = () => {
               <Input
                 value={editForm.full_name}
                 onChange={(e) => setEditForm({ ...editForm, full_name: e.target.value })}
-                className="mt-1"
+                className="mt-1 rounded-xl"
               />
             </div>
-            <Button variant="gradient" className="w-full" onClick={handleSaveProfile}>
+            <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl" onClick={handleSaveProfile}>
               Save Changes
             </Button>
           </div>
