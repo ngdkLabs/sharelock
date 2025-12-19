@@ -1,19 +1,20 @@
 import { motion } from "framer-motion";
-import { Map, Users, UserPlus, User, MessageCircle } from "lucide-react";
+import { Home, Search, Users, User } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { useProfile } from "@/hooks/useProfile";
 
 const navItems = [
-  { icon: Map, label: "Map", path: "/map" },
-  { icon: Users, label: "Friends", path: "/friends" },
-  { icon: MessageCircle, label: "Chat", path: "/chat" },
-  { icon: UserPlus, label: "Add", path: "/invite" },
-  { icon: User, label: "Profile", path: "/profile" },
+  { icon: Home, path: "/map" },
+  { icon: Search, path: "/friends" },
+  { icon: Users, path: "/chat" },
+  { icon: User, path: "/profile" },
 ];
 
 export const BottomNavigation = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { profile } = useProfile();
 
   return (
     <motion.nav
@@ -21,11 +22,12 @@ export const BottomNavigation = () => {
       animate={{ y: 0 }}
       className="fixed bottom-0 left-0 right-0 z-50 pb-safe pointer-events-none"
     >
-      <div className="mx-3 mb-3 sm:mx-4 sm:mb-4 pointer-events-auto">
-        <div className="glass-nav rounded-2xl p-1 sm:p-1.5 flex justify-around items-center shadow-elevated">
-          {navItems.map((item) => {
+      <div className="flex justify-center mx-4 mb-4 pointer-events-auto">
+        <div className="bg-[#2a3441] rounded-full px-3 py-2 flex items-center gap-2 shadow-xl">
+          {navItems.map((item, index) => {
             const isActive = location.pathname === item.path;
             const Icon = item.icon;
+            const isProfile = item.path === "/profile";
 
             return (
               <motion.button
@@ -33,29 +35,24 @@ export const BottomNavigation = () => {
                 whileTap={{ scale: 0.9 }}
                 onClick={() => navigate(item.path)}
                 className={cn(
-                  "relative flex flex-col items-center gap-0.5 px-3 py-2 sm:px-5 rounded-xl transition-all min-w-[52px]",
+                  "relative flex items-center justify-center w-11 h-11 rounded-xl transition-all",
                   isActive 
-                    ? "text-primary" 
-                    : "text-muted-foreground hover:text-foreground"
+                    ? "bg-white/90 text-[#2a3441]" 
+                    : "text-gray-400 hover:text-white"
                 )}
               >
-                {isActive && (
-                  <motion.div
-                    layoutId="activeTab"
-                    className="absolute inset-0 bg-primary/15 rounded-xl"
-                    transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                {isProfile && profile?.avatar_url ? (
+                  <img 
+                    src={profile.avatar_url} 
+                    alt="Profile" 
+                    className={cn(
+                      "w-8 h-8 rounded-full object-cover",
+                      isActive && "ring-2 ring-white"
+                    )}
                   />
+                ) : (
+                  <Icon className="w-5 h-5" />
                 )}
-                <Icon className={cn(
-                  "w-5 h-5 sm:w-5 sm:h-5 relative z-10 transition-colors",
-                  isActive && "text-primary"
-                )} />
-                <span className={cn(
-                  "text-[9px] sm:text-[10px] font-medium relative z-10",
-                  isActive && "text-primary font-semibold"
-                )}>
-                  {item.label}
-                </span>
               </motion.button>
             );
           })}
