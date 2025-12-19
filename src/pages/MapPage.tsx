@@ -1,19 +1,33 @@
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import { Crosshair, Plus, Minus, Users, Navigation2, Battery } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Crosshair, Plus, Minus, Users, Navigation2, Battery, MapPin, X, Clock, Loader2 } from "lucide-react";
 import { MapView } from "@/components/MapView";
 import { BottomNavigation } from "@/components/BottomNavigation";
 import { Button } from "@/components/ui/button";
 import { useLocationTracking } from "@/hooks/useLocationTracking";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/hooks/useProfile";
+import { useReverseGeocode } from "@/hooks/useReverseGeocode";
 import { formatDistanceToNow } from "date-fns";
+
+interface SelectedUser {
+  id: string;
+  name: string;
+  lat: number;
+  lng: number;
+  isCurrentUser?: boolean;
+  avatarUrl?: string | null;
+  updatedAt?: string;
+  address?: string;
+}
 
 const MapPage = () => {
   const { user } = useAuth();
   const { profile } = useProfile();
   const { currentLocation, friendsLocations, isTracking, error } = useLocationTracking();
+  const { getAddress, isLoading: isLoadingAddress } = useReverseGeocode();
   const [mapCenter, setMapCenter] = useState<[number, number]>([-6.2088, 106.8456]);
+  const [selectedUser, setSelectedUser] = useState<SelectedUser | null>(null);
 
   useEffect(() => {
     if (currentLocation) {
@@ -50,11 +64,31 @@ const MapPage = () => {
     }
   };
 
-  const handleUserClick = (userId: string) => {
+  const handleUserClick = async (userId: string) => {
     const targetUser = mapUsers.find((u) => u.id === userId);
     if (targetUser) {
       setMapCenter([targetUser.lat, targetUser.lng]);
+      setSelectedUser({ ...targetUser, address: undefined });
+      
+      // Fetch address
+      const result = await getAddress(targetUser.lat, targetUser.lng);
+      if (result) {
+        const addr = result.address;
+        const parts = [
+          addr.road && (addr.house_number ? `${addr.road} No. ${addr.house_number}` : addr.road),
+          addr.suburb || addr.village,
+          addr.city || addr.county,
+          addr.state,
+          addr.postcode,
+        ].filter(Boolean);
+        
+        setSelectedUser(prev => prev ? { ...prev, address: parts.join(", ") || result.display_name } : null);
+      }
     }
+  };
+
+  const closeUserDetail = () => {
+    setSelectedUser(null);
   };
 
   return (
@@ -137,7 +171,7 @@ const MapPage = () => {
       </motion.div>
 
       {/* Friends preview - Bottom */}
-      {friendsLocations.length > 0 && (
+      {friendsLocations.length > 0 && !selectedUser && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -170,6 +204,81 @@ const MapPage = () => {
           </div>
         </motion.div>
       )}
+
+      {/* User Detail Card */}
+      <AnimatePresence>
+        {selectedUser && (
+          <motion.div
+            initial={{ opacity: 0, y: 100 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 100 }}
+            className="absolute bottom-24 left-4 right-4 z-40"
+          >
+            <div className="bg-card/95 backdrop-blur-xl rounded-3xl p-5 shadow-card border border-border/50">
+              <div className="flex items-start gap-4">
+                {/* Avatar */}
+                <div className="relative flex-shrink-0">
+                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-accent flex items-center justify-center text-primary-foreground font-bold text-xl overflow-hidden">
+                    {selectedUser.avatarUrl ? (
+                      <img src={selectedUser.avatarUrl} className="w-full h-full object-cover" alt={selectedUser.name} />
+                    ) : (
+                      selectedUser.name.charAt(0).toUpperCase()
+                    )}
+                  </div>
+                  <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-green-500 border-2 border-card" />
+                </div>
+
+                {/* Info */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-bold text-foreground truncate">
+                      {selectedUser.isCurrentUser ? "Lokasi Anda" : selectedUser.name}
+                    </h3>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 rounded-full"
+                      onClick={closeUserDetail}
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </div>
+
+                  {/* Address */}
+                  <div className="flex items-start gap-2 mt-2">
+                    <MapPin className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+                    {isLoadingAddress || !selectedUser.address ? (
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Loader2 className="w-3 h-3 animate-spin" />
+                        <span>Mengambil alamat...</span>
+                      </div>
+                    ) : (
+                      <p className="text-sm text-muted-foreground leading-relaxed">
+                        {selectedUser.address}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Last updated */}
+                  {selectedUser.updatedAt && (
+                    <div className="flex items-center gap-2 mt-2">
+                      <Clock className="w-3 h-3 text-muted-foreground" />
+                      <p className="text-xs text-muted-foreground">
+                        Update {formatDistanceToNow(new Date(selectedUser.updatedAt), { addSuffix: true })}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Coordinates */}
+                  <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground/70 font-mono">
+                    <span>{selectedUser.lat.toFixed(6)}, {selectedUser.lng.toFixed(6)}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <BottomNavigation />
     </div>
