@@ -381,66 +381,30 @@ export const FriendLocationDetail = ({
                   </button>
                 </div>
 
-                {/* Street View Preview */}
-                <div className="mt-5 space-y-4">
-                  <div className="rounded-xl overflow-hidden border border-border">
-                    <div className="relative aspect-video bg-muted">
-                      {isLoadingPlace ? (
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <Loader2 className="w-8 h-8 animate-spin text-primary" />
-                        </div>
-                      ) : streetViewImage && !imageError ? (
-                        <img 
-                          src={streetViewImage} 
-                          alt="Street view"
-                          className="w-full h-full object-cover"
-                          onError={() => setImageError(true)}
-                        />
-                      ) : (
-                        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-muted-foreground">
-                          <ImageIcon className="w-12 h-12" />
-                          <p className="text-sm">Preview tidak tersedia</p>
-                        </div>
-                      )}
-                      
-                      {/* Overlay button */}
-                      <button
-                        onClick={openStreetView}
-                        className="absolute bottom-3 right-3 bg-card/90 backdrop-blur-sm px-3 py-2 rounded-lg flex items-center gap-2 shadow-card hover:bg-card transition-colors"
-                      >
-                        <Eye className="w-4 h-4 text-primary" />
-                        <span className="text-xs font-medium text-foreground">Street View</span>
-                        <ExternalLink className="w-3 h-3 text-muted-foreground" />
-                      </button>
-                    </div>
-                    
-                    {/* Place name if available */}
+                {/* Location Details */}
+                <div className="mt-5 bg-muted/50 rounded-xl p-4">
+                  <h4 className="text-sm font-medium text-foreground mb-2">Detail Lokasi</h4>
+                  <div className="space-y-2 text-sm">
                     {placeInfo?.name && (
-                      <div className="p-3 bg-muted/30">
-                        <p className="text-sm font-medium text-foreground">{placeInfo.name}</p>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Tempat</span>
+                        <span className="text-foreground font-medium">{placeInfo.name}</span>
                       </div>
                     )}
-                  </div>
-
-                  {/* Location Details */}
-                  <div className="bg-muted/50 rounded-xl p-4">
-                    <h4 className="text-sm font-medium text-foreground mb-2">Detail Lokasi</h4>
-                    <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Koordinat</span>
+                      <span className="text-foreground font-mono text-xs">
+                        {friend.lat.toFixed(6)}, {friend.lng.toFixed(6)}
+                      </span>
+                    </div>
+                    {friend.updatedAt && (
                       <div className="flex justify-between">
-                        <span className="text-muted-foreground">Koordinat</span>
-                        <span className="text-foreground font-mono text-xs">
-                          {friend.lat.toFixed(6)}, {friend.lng.toFixed(6)}
+                        <span className="text-muted-foreground">Terakhir update</span>
+                        <span className="text-foreground">
+                          {format(new Date(friend.updatedAt), "HH:mm, d MMM yyyy")}
                         </span>
                       </div>
-                      {friend.updatedAt && (
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Terakhir update</span>
-                          <span className="text-foreground">
-                            {format(new Date(friend.updatedAt), "HH:mm, d MMM yyyy")}
-                          </span>
-                        </div>
-                      )}
-                    </div>
+                    )}
                   </div>
                 </div>
               </motion.div>
