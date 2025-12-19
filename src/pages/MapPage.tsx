@@ -58,20 +58,23 @@ const MapPage = () => {
   };
 
   return (
-    <div className="h-screen w-full relative bg-background">
-      <MapView 
-        users={mapUsers} 
-        center={mapCenter} 
-        className="h-full w-full" 
-        onUserClick={handleUserClick}
-      />
+    <div className="h-screen w-full relative bg-background overflow-hidden">
+      {/* Map layer - lowest z-index */}
+      <div className="absolute inset-0 z-0">
+        <MapView 
+          users={mapUsers} 
+          center={mapCenter} 
+          className="h-full w-full" 
+          onUserClick={handleUserClick}
+        />
+      </div>
 
       {/* Floating controls - Right side */}
-      <div className="absolute top-24 right-4 z-20 flex flex-col gap-2">
-        <Button variant="glass" size="icon" className="shadow-card w-12 h-12 rounded-xl">
+      <div className="absolute top-24 right-4 z-30 flex flex-col gap-2">
+        <Button variant="glass" size="icon" className="shadow-card w-12 h-12 rounded-xl bg-card/90">
           <Plus className="w-5 h-5" />
         </Button>
-        <Button variant="glass" size="icon" className="shadow-card w-12 h-12 rounded-xl">
+        <Button variant="glass" size="icon" className="shadow-card w-12 h-12 rounded-xl bg-card/90">
           <Minus className="w-5 h-5" />
         </Button>
       </div>
@@ -80,7 +83,7 @@ const MapPage = () => {
       <motion.div
         initial={{ opacity: 0, scale: 0 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="absolute bottom-28 right-4 z-20"
+        className="absolute bottom-32 right-4 z-30"
       >
         <Button 
           variant="gradient" 
@@ -96,9 +99,9 @@ const MapPage = () => {
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="absolute top-6 left-4 right-20 z-20"
+        className="absolute top-6 left-4 right-20 z-30"
       >
-        <div className="glass rounded-2xl p-4 shadow-card">
+        <div className="glass rounded-2xl p-4 shadow-card bg-card/90">
           <div className="flex items-center justify-between">
             <div>
               <div className="flex items-center gap-2">
@@ -138,7 +141,7 @@ const MapPage = () => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="absolute bottom-28 left-4 right-20 z-20"
+          className="absolute bottom-32 left-4 right-20 z-30"
         >
           <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
             {friendsLocations.slice(0, 4).map((loc) => (
