@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Crosshair, Plus, Minus, Users, Navigation2, Battery, MapPin, X, Clock, Loader2, Route } from "lucide-react";
+import { Crosshair, Users, Navigation2, Battery, MapPin, X, Clock, Loader2, Route } from "lucide-react";
 import { MapView } from "@/components/MapView";
 import { BottomNavigation } from "@/components/BottomNavigation";
 import { Button } from "@/components/ui/button";
@@ -8,7 +8,7 @@ import { useLocationTracking } from "@/hooks/useLocationTracking";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/hooks/useProfile";
 import { useReverseGeocode } from "@/hooks/useReverseGeocode";
-import { useLocationHistory, LocationHistoryPoint } from "@/hooks/useLocationHistory";
+import { useLocationHistory } from "@/hooks/useLocationHistory";
 import { formatDistanceToNow } from "date-fns";
 
 interface SelectedUser {
@@ -124,7 +124,7 @@ const MapPage = () => {
 
   return (
     <div className="h-screen w-full relative bg-background overflow-hidden">
-      {/* Map layer - lowest z-index */}
+      {/* Map layer */}
       <div className="absolute inset-0 z-0">
         <MapView 
           users={mapUsers} 
@@ -132,18 +132,8 @@ const MapPage = () => {
           className="h-full w-full" 
           onUserClick={handleUserClick}
           trail={trail}
-          trailColor={showingTrailFor === user?.id ? "#14b8a6" : "#f87171"}
+          trailColor={showingTrailFor === user?.id ? "#22c55e" : "#3b82f6"}
         />
-      </div>
-
-      {/* Floating controls - Right side */}
-      <div className="absolute top-24 right-4 z-30 flex flex-col gap-2">
-        <Button variant="glass" size="icon" className="shadow-card w-12 h-12 rounded-xl bg-card/90">
-          <Plus className="w-5 h-5" />
-        </Button>
-        <Button variant="glass" size="icon" className="shadow-card w-12 h-12 rounded-xl bg-card/90">
-          <Minus className="w-5 h-5" />
-        </Button>
       </div>
 
       {/* Center on me button */}
@@ -153,9 +143,8 @@ const MapPage = () => {
         className="absolute bottom-32 right-4 z-30"
       >
         <Button 
-          variant="gradient" 
           size="icon" 
-          className="w-14 h-14 rounded-2xl shadow-glow-teal"
+          className="w-14 h-14 rounded-2xl bg-primary hover:bg-primary/90 text-primary-foreground shadow-glow-green"
           onClick={handleCenterOnMe}
         >
           <Crosshair className="w-6 h-6" />
@@ -166,9 +155,9 @@ const MapPage = () => {
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="absolute top-6 left-4 right-20 z-30"
+        className="absolute top-4 left-4 right-4 z-30"
       >
-        <div className="glass rounded-2xl p-4 shadow-card bg-card/90">
+        <div className="bg-card rounded-2xl p-4 shadow-card border border-border/50">
           <div className="flex items-center justify-between">
             <div>
               <div className="flex items-center gap-2">
@@ -180,8 +169,8 @@ const MapPage = () => {
               <div className="flex items-center gap-2 mt-1">
                 {isTracking ? (
                   <>
-                    <Navigation2 className="w-3 h-3 text-teal animate-pulse" />
-                    <span className="text-xs text-teal">Sharing location</span>
+                    <Navigation2 className="w-3 h-3 text-primary animate-pulse" />
+                    <span className="text-xs text-primary font-medium">Sharing location</span>
                   </>
                 ) : (
                   <span className="text-xs text-muted-foreground">Location off</span>
@@ -215,9 +204,9 @@ const MapPage = () => {
               <button
                 key={loc.user_id}
                 onClick={() => handleUserClick(loc.user_id)}
-                className="flex-shrink-0 glass rounded-2xl p-3 flex items-center gap-3 hover:bg-card/90 transition-colors"
+                className="flex-shrink-0 bg-card rounded-2xl p-3 flex items-center gap-3 shadow-card border border-border/50 hover:shadow-elevated transition-shadow"
               >
-                <div className="w-10 h-10 rounded-full bg-gradient-warm flex items-center justify-center text-secondary-foreground font-bold">
+                <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-bold">
                   {loc.profile?.avatar_url ? (
                     <img src={loc.profile.avatar_url} className="w-full h-full rounded-full object-cover" />
                   ) : (
@@ -242,7 +231,7 @@ const MapPage = () => {
       <AnimatePresence>
         {selectedUser && (
           <>
-            {/* Backdrop to close on tap outside */}
+            {/* Backdrop */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -256,25 +245,25 @@ const MapPage = () => {
               exit={{ opacity: 0, y: 100 }}
               className="absolute bottom-24 left-4 right-4 z-40"
             >
-              <div className="bg-card/95 backdrop-blur-xl rounded-3xl p-5 shadow-card border border-border/50">
+              <div className="bg-card rounded-3xl p-5 shadow-elevated border border-border/50">
                 <div className="flex items-start gap-4">
                   {/* Avatar */}
                   <div className="relative flex-shrink-0">
-                    <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-accent flex items-center justify-center text-primary-foreground font-bold text-xl overflow-hidden">
+                    <div className="w-16 h-16 rounded-2xl bg-primary flex items-center justify-center text-primary-foreground font-bold text-xl overflow-hidden">
                       {selectedUser.avatarUrl ? (
                         <img src={selectedUser.avatarUrl} className="w-full h-full object-cover" alt={selectedUser.name} />
                       ) : (
                         selectedUser.name.charAt(0).toUpperCase()
                       )}
                     </div>
-                    <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-green-500 border-2 border-card" />
+                    <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-primary border-2 border-card" />
                   </div>
 
                   {/* Info */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between">
                       <h3 className="text-lg font-bold text-foreground truncate">
-                        {selectedUser.isCurrentUser ? "Lokasi Anda" : selectedUser.name}
+                        {selectedUser.isCurrentUser ? "Your Location" : selectedUser.name}
                       </h3>
                       <button
                         type="button"
@@ -284,7 +273,7 @@ const MapPage = () => {
                           closeUserDetail();
                         }}
                       >
-                        <X className="w-4 h-4" />
+                        <X className="w-4 h-4 text-muted-foreground" />
                       </button>
                     </div>
 
@@ -294,7 +283,7 @@ const MapPage = () => {
                       {isLoadingAddress || !selectedUser.address ? (
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
                           <Loader2 className="w-3 h-3 animate-spin" />
-                          <span>Mengambil alamat...</span>
+                          <span>Getting address...</span>
                         </div>
                       ) : (
                         <p className="text-sm text-muted-foreground leading-relaxed">
@@ -308,7 +297,7 @@ const MapPage = () => {
                       <div className="flex items-center gap-2 mt-2">
                         <Clock className="w-3 h-3 text-muted-foreground" />
                         <p className="text-xs text-muted-foreground">
-                          Update {formatDistanceToNow(new Date(selectedUser.updatedAt), { addSuffix: true })}
+                          Updated {formatDistanceToNow(new Date(selectedUser.updatedAt), { addSuffix: true })}
                         </p>
                       </div>
                     )}
@@ -337,7 +326,7 @@ const MapPage = () => {
                         <Route className="w-4 h-4" />
                       )}
                       <span>
-                        {showingTrailFor === selectedUser.id ? "Sembunyikan Riwayat" : "Lihat Riwayat 24 Jam"}
+                        {showingTrailFor === selectedUser.id ? "Hide History" : "View 24h History"}
                       </span>
                     </button>
                   </div>

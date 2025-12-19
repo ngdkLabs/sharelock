@@ -65,21 +65,22 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
-        teal: {
-          DEFAULT: "hsl(var(--teal))",
-          glow: "hsl(var(--teal-glow))",
+        green: {
+          DEFAULT: "hsl(var(--green))",
+          light: "hsl(var(--green-light))",
+          glow: "hsl(var(--green-glow))",
         },
-        coral: {
-          DEFAULT: "hsl(var(--coral))",
-          glow: "hsl(var(--coral-glow))",
+        blue: {
+          DEFAULT: "hsl(var(--blue))",
+          light: "hsl(var(--blue-light))",
         },
-        purple: {
-          DEFAULT: "hsl(var(--purple))",
-          glow: "hsl(var(--purple-glow))",
+        orange: {
+          DEFAULT: "hsl(var(--orange))",
+          light: "hsl(var(--orange-light))",
         },
-        ocean: {
-          DEFAULT: "hsl(var(--ocean))",
-          glow: "hsl(var(--ocean-glow))",
+        red: {
+          DEFAULT: "hsl(var(--red))",
+          light: "hsl(var(--red-light))",
         },
       },
       borderRadius: {
@@ -140,10 +141,9 @@ export default {
       },
       boxShadow: {
         soft: "var(--shadow-soft)",
-        "glow-teal": "var(--shadow-glow-teal)",
-        "glow-coral": "var(--shadow-glow-coral)",
-        "glow-purple": "var(--shadow-glow-purple)",
         card: "var(--shadow-card)",
+        elevated: "var(--shadow-elevated)",
+        "glow-green": "var(--shadow-glow-green)",
       },
       backgroundImage: {
         "gradient-primary": "var(--gradient-primary)",
