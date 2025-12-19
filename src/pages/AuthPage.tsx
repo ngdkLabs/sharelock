@@ -79,12 +79,12 @@ const AuthPage = () => {
           initial={{ scale: 0, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ type: "spring", stiffness: 200 }}
-          className="mb-8"
+          className="mb-10"
         >
           <img 
             src={shareLogo} 
             alt="Share Logo" 
-            className="w-32 h-auto"
+            className="w-56 h-auto drop-shadow-2xl"
           />
         </motion.div>
 
@@ -93,16 +93,18 @@ const AuthPage = () => {
           animate={{ opacity: 1, y: 0 }}
           className="w-full max-w-sm"
         >
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-foreground">
-              {isLogin ? "Welcome back" : "Create account"}
-            </h1>
-            <p className="text-muted-foreground mt-2">
-              {isLogin ? "Sign in to continue" : "Start sharing your location"}
-            </p>
-          </div>
+          {/* Glassmorphism Card */}
+          <div className="bg-background/20 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl">
+            <div className="text-center mb-8">
+              <h1 className="text-3xl font-bold text-foreground">
+                {isLogin ? "Welcome back" : "Create account"}
+              </h1>
+              <p className="text-muted-foreground mt-2">
+                {isLogin ? "Sign in to continue" : "Start sharing your location"}
+              </p>
+            </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-4">
             {!isLogin && (
               <>
                 <div className="relative">
@@ -177,19 +179,20 @@ const AuthPage = () => {
                 isLogin ? "Sign In" : "Create Account"
               )}
             </Button>
-          </form>
+            </form>
 
-          <div className="mt-6 text-center">
-            <button
-              onClick={() => setIsLogin(!isLogin)}
-              className="text-muted-foreground hover:text-foreground transition-colors"
-            >
-              {isLogin ? (
-                <>Don't have an account? <span className="text-primary font-semibold">Sign up</span></>
-              ) : (
-                <>Already have an account? <span className="text-primary font-semibold">Sign in</span></>
-              )}
-            </button>
+            <div className="mt-6 text-center">
+              <button
+                onClick={() => setIsLogin(!isLogin)}
+                className="text-muted-foreground hover:text-foreground transition-colors"
+              >
+                {isLogin ? (
+                  <>Don't have an account? <span className="text-primary font-semibold">Sign up</span></>
+                ) : (
+                  <>Already have an account? <span className="text-primary font-semibold">Sign in</span></>
+                )}
+              </button>
+            </div>
           </div>
         </motion.div>
       </div>
