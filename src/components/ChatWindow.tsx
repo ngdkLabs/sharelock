@@ -1,10 +1,10 @@
 import { useState, useRef, useEffect } from 'react';
-import { X, Send, Image, MapPin, Loader2, Check, CheckCheck, Mic, Square, Play, Pause, Smile } from 'lucide-react';
+import { X, Send, Image, MapPin, Loader2, Check, CheckCheck, Mic, Square, Play, Pause, Smile, Reply, XCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { useMessages } from '@/hooks/useMessages';
+import { useMessages, Message } from '@/hooks/useMessages';
 import { useAuth } from '@/contexts/AuthContext';
 import { useReverseGeocode } from '@/hooks/useReverseGeocode';
 import { format } from 'date-fns';
@@ -45,7 +45,7 @@ const animatedEmojis = [
 
 const ChatWindow = ({ friendId, friendName, friendAvatar, onClose }: ChatWindowProps) => {
   const { user } = useAuth();
-  const { messages, loading, sendMessage, sendImageMessage, sendLocationMessage, sendVoiceMessage } = useMessages(friendId);
+  const { messages, loading, friendIsTyping, sendMessage, sendImageMessage, sendLocationMessage, sendVoiceMessage, handleTyping } = useMessages(friendId);
   const { getAddress } = useReverseGeocode();
   const [newMessage, setNewMessage] = useState('');
   const [sending, setSending] = useState(false);
@@ -53,6 +53,7 @@ const ChatWindow = ({ friendId, friendName, friendAvatar, onClose }: ChatWindowP
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
   const [playingAudio, setPlayingAudio] = useState<string | null>(null);
+  const [replyTo, setReplyTo] = useState<Message | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -71,8 +72,9 @@ const ChatWindow = ({ friendId, friendName, friendAvatar, onClose }: ChatWindowP
     if (!newMessage.trim() || sending) return;
     
     setSending(true);
-    await sendMessage(newMessage);
+    await sendMessage(newMessage, replyTo || undefined);
     setNewMessage('');
+    setReplyTo(null);
     setSending(false);
   };
 
@@ -83,8 +85,18 @@ const ChatWindow = ({ friendId, friendName, friendAvatar, onClose }: ChatWindowP
     }
   };
 
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setNewMessage(e.target.value);
+    handleTyping();
+  };
+
   const handleEmojiSelect = (emoji: string) => {
     setNewMessage(prev => prev + emoji);
+    handleTyping();
+  };
+
+  const handleReply = (message: Message) => {
+    setReplyTo(message);
   };
 
   const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -102,8 +114,9 @@ const ChatWindow = ({ friendId, friendName, friendAvatar, onClose }: ChatWindowP
     }
 
     setSending(true);
-    await sendImageMessage(file);
+    await sendImageMessage(file, replyTo || undefined);
     setSending(false);
+    setReplyTo(null);
     
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
@@ -198,7 +211,6 @@ const ChatWindow = ({ friendId, friendName, friendAvatar, onClose }: ChatWindowP
       audio.pause();
       setPlayingAudio(null);
     } else {
-      // Pause any currently playing audio
       Object.values(audioRefs.current).forEach(a => a.pause());
       audio.play();
       setPlayingAudio(messageId);
@@ -207,6 +219,13 @@ const ChatWindow = ({ friendId, friendName, friendAvatar, onClose }: ChatWindowP
 
   const openLocationInMap = (lat: number, lng: number) => {
     window.open(`https://www.google.com/maps?q=${lat},${lng}`, '_blank');
+  };
+
+  const getMessagePreview = (msg: Message) => {
+    if (msg.image_url) return '📷 Gambar';
+    if (msg.audio_url) return '🎤 Pesan suara';
+    if (msg.location_lat) return '📍 Lokasi';
+    return msg.content.length > 50 ? msg.content.substring(0, 50) + '...' : msg.content;
   };
 
   return (
@@ -224,7 +243,21 @@ const ChatWindow = ({ friendId, friendName, friendAvatar, onClose }: ChatWindowP
               <span className="text-primary font-semibold">{friendName.charAt(0).toUpperCase()}</span>
             )}
           </div>
-          <span className="font-semibold">{friendName}</span>
+          <div>
+            <span className="font-semibold block">{friendName}</span>
+            <AnimatePresence>
+              {friendIsTyping && (
+                <motion.span
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="text-xs text-primary"
+                >
+                  sedang mengetik...
+                </motion.span>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
       </div>
 
@@ -246,12 +279,25 @@ const ChatWindow = ({ friendId, friendName, friendAvatar, onClose }: ChatWindowP
               const hasLocation = msg.location_lat && msg.location_lng;
               const hasImage = msg.image_url;
               const hasAudio = msg.audio_url;
+              const hasReply = msg.reply_to_id;
 
               return (
                 <div
                   key={msg.id}
-                  className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}
+                  className={`flex ${isMine ? 'justify-end' : 'justify-start'} group`}
                 >
+                  {/* Reply button - left side for friend messages */}
+                  {!isMine && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity mr-1"
+                      onClick={() => handleReply(msg)}
+                    >
+                      <Reply className="h-4 w-4" />
+                    </Button>
+                  )}
+
                   <div
                     className={`max-w-[75%] rounded-2xl overflow-hidden ${
                       isMine
@@ -259,6 +305,18 @@ const ChatWindow = ({ friendId, friendName, friendAvatar, onClose }: ChatWindowP
                         : 'bg-muted rounded-bl-sm'
                     }`}
                   >
+                    {/* Reply preview */}
+                    {hasReply && (
+                      <div className={`px-3 py-2 border-l-2 ${isMine ? 'border-primary-foreground/50 bg-primary-foreground/10' : 'border-primary bg-primary/10'}`}>
+                        <p className={`text-[10px] font-medium ${isMine ? 'text-primary-foreground/70' : 'text-primary'}`}>
+                          {msg.reply_to_sender_name}
+                        </p>
+                        <p className={`text-xs truncate ${isMine ? 'text-primary-foreground/60' : 'text-muted-foreground'}`}>
+                          {msg.reply_to_content}
+                        </p>
+                      </div>
+                    )}
+
                     {/* Image message */}
                     {hasImage && (
                       <img 
@@ -338,13 +396,83 @@ const ChatWindow = ({ friendId, friendName, friendAvatar, onClose }: ChatWindowP
                       )}
                     </div>
                   </div>
+
+                  {/* Reply button - right side for my messages */}
+                  {isMine && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity ml-1"
+                      onClick={() => handleReply(msg)}
+                    >
+                      <Reply className="h-4 w-4" />
+                    </Button>
+                  )}
                 </div>
               );
             })}
+
+            {/* Typing indicator */}
+            <AnimatePresence>
+              {friendIsTyping && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 10 }}
+                  className="flex justify-start"
+                >
+                  <div className="bg-muted rounded-2xl rounded-bl-sm px-4 py-3">
+                    <div className="flex gap-1">
+                      <motion.div
+                        className="w-2 h-2 bg-muted-foreground rounded-full"
+                        animate={{ y: [0, -5, 0] }}
+                        transition={{ repeat: Infinity, duration: 0.6, delay: 0 }}
+                      />
+                      <motion.div
+                        className="w-2 h-2 bg-muted-foreground rounded-full"
+                        animate={{ y: [0, -5, 0] }}
+                        transition={{ repeat: Infinity, duration: 0.6, delay: 0.2 }}
+                      />
+                      <motion.div
+                        className="w-2 h-2 bg-muted-foreground rounded-full"
+                        animate={{ y: [0, -5, 0] }}
+                        transition={{ repeat: Infinity, duration: 0.6, delay: 0.4 }}
+                      />
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
             <div ref={scrollRef} />
           </div>
         )}
       </ScrollArea>
+
+      {/* Reply preview */}
+      <AnimatePresence>
+        {replyTo && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+            className="px-4 py-2 bg-muted/50 border-t flex items-center gap-2"
+          >
+            <div className="w-1 h-10 bg-primary rounded-full" />
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-medium text-primary">
+                Membalas {replyTo.sender_id === user?.id ? 'Anda' : friendName}
+              </p>
+              <p className="text-sm text-muted-foreground truncate">
+                {getMessagePreview(replyTo)}
+              </p>
+            </div>
+            <Button variant="ghost" size="icon" onClick={() => setReplyTo(null)}>
+              <XCircle className="h-5 w-5" />
+            </Button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Input */}
       <div className="p-4 border-t bg-card">
@@ -453,7 +581,7 @@ const ChatWindow = ({ friendId, friendName, friendAvatar, onClose }: ChatWindowP
           {/* Text input */}
           <Input
             value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
+            onChange={handleInputChange}
             onKeyPress={handleKeyPress}
             placeholder="Ketik pesan..."
             className="flex-1"

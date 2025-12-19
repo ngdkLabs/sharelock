@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -16,6 +16,9 @@ export interface Message {
   location_address?: string | null;
   audio_url?: string | null;
   audio_duration?: number | null;
+  reply_to_id?: string | null;
+  reply_to_content?: string | null;
+  reply_to_sender_name?: string | null;
 }
 
 export const useMessages = (friendId: string | null) => {
@@ -23,6 +26,8 @@ export const useMessages = (friendId: string | null) => {
   const { toast } = useToast();
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(false);
+  const [friendIsTyping, setFriendIsTyping] = useState(false);
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Request notification permission
   const requestNotificationPermission = useCallback(async () => {
@@ -80,18 +85,61 @@ export const useMessages = (friendId: string | null) => {
     }
   };
 
-  // Send a text message
-  const sendMessage = async (content: string) => {
-    if (!user || !friendId || !content.trim()) return;
+  // Update typing status
+  const setTyping = useCallback(async (isTyping: boolean) => {
+    if (!user || !friendId) return;
 
     try {
+      await supabase
+        .from('typing_status')
+        .upsert({
+          user_id: user.id,
+          friend_id: friendId,
+          is_typing: isTyping,
+          updated_at: new Date().toISOString()
+        }, {
+          onConflict: 'user_id,friend_id'
+        });
+    } catch (error) {
+      console.error('Error updating typing status:', error);
+    }
+  }, [user, friendId]);
+
+  // Handle typing with debounce
+  const handleTyping = useCallback(() => {
+    setTyping(true);
+    
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+    
+    typingTimeoutRef.current = setTimeout(() => {
+      setTyping(false);
+    }, 2000);
+  }, [setTyping]);
+
+  // Send a text message
+  const sendMessage = async (content: string, replyTo?: Message) => {
+    if (!user || !friendId || !content.trim()) return;
+
+    setTyping(false);
+
+    try {
+      const insertData: any = {
+        sender_id: user.id,
+        receiver_id: friendId,
+        content: content.trim()
+      };
+
+      if (replyTo) {
+        insertData.reply_to_id = replyTo.id;
+        insertData.reply_to_content = replyTo.content || (replyTo.image_url ? '📷 Gambar' : replyTo.audio_url ? '🎤 Pesan suara' : '📍 Lokasi');
+        insertData.reply_to_sender_name = replyTo.sender_id === user.id ? 'Anda' : 'Teman';
+      }
+
       const { data, error } = await supabase
         .from('messages')
-        .insert({
-          sender_id: user.id,
-          receiver_id: friendId,
-          content: content.trim()
-        })
+        .insert(insertData)
         .select()
         .single();
 
@@ -108,7 +156,7 @@ export const useMessages = (friendId: string | null) => {
   };
 
   // Send image message
-  const sendImageMessage = async (file: File) => {
+  const sendImageMessage = async (file: File, replyTo?: Message) => {
     if (!user || !friendId) return null;
 
     try {
@@ -125,14 +173,22 @@ export const useMessages = (friendId: string | null) => {
         .from('chat-images')
         .getPublicUrl(fileName);
 
+      const insertData: any = {
+        sender_id: user.id,
+        receiver_id: friendId,
+        content: '',
+        image_url: urlData.publicUrl
+      };
+
+      if (replyTo) {
+        insertData.reply_to_id = replyTo.id;
+        insertData.reply_to_content = replyTo.content || '📷 Gambar';
+        insertData.reply_to_sender_name = replyTo.sender_id === user.id ? 'Anda' : 'Teman';
+      }
+
       const { data, error } = await supabase
         .from('messages')
-        .insert({
-          sender_id: user.id,
-          receiver_id: friendId,
-          content: '',
-          image_url: urlData.publicUrl
-        })
+        .insert(insertData)
         .select()
         .single();
 
@@ -233,14 +289,15 @@ export const useMessages = (friendId: string | null) => {
     return count || 0;
   };
 
-  // Subscribe to realtime messages
+  // Subscribe to realtime messages and typing status
   useEffect(() => {
     if (!user || !friendId) return;
 
     fetchMessages();
     requestNotificationPermission();
 
-    const channel = supabase
+    // Messages channel
+    const messagesChannel = supabase
       .channel(`messages-${friendId}`)
       .on(
         'postgres_changes',
@@ -252,22 +309,17 @@ export const useMessages = (friendId: string | null) => {
         (payload) => {
           const newMessage = payload.new as Message;
           
-          // Only add if it's relevant to this conversation
           if (
             (newMessage.sender_id === user.id && newMessage.receiver_id === friendId) ||
             (newMessage.sender_id === friendId && newMessage.receiver_id === user.id)
           ) {
             setMessages(prev => {
-              // Check if message already exists
               if (prev.some(m => m.id === newMessage.id)) return prev;
               return [...prev, newMessage];
             });
             
-            // Show notification if we received it and app is not visible
             if (newMessage.receiver_id === user.id) {
               showNotification('Teman', newMessage.content || '📍 Berbagi lokasi');
-              
-              // Mark as read
               supabase
                 .from('messages')
                 .update({ is_read: true })
@@ -278,18 +330,44 @@ export const useMessages = (friendId: string | null) => {
       )
       .subscribe();
 
+    // Typing status channel
+    const typingChannel = supabase
+      .channel(`typing-${friendId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'typing_status',
+          filter: `user_id=eq.${friendId}`
+        },
+        (payload) => {
+          const status = payload.new as any;
+          if (status.friend_id === user.id) {
+            setFriendIsTyping(status.is_typing);
+          }
+        }
+      )
+      .subscribe();
+
     return () => {
-      supabase.removeChannel(channel);
+      supabase.removeChannel(messagesChannel);
+      supabase.removeChannel(typingChannel);
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
     };
   }, [user, friendId]);
 
   return {
     messages,
     loading,
+    friendIsTyping,
     sendMessage,
     sendImageMessage,
     sendLocationMessage,
     sendVoiceMessage,
+    handleTyping,
     getUnreadCount,
     refetch: fetchMessages
   };
