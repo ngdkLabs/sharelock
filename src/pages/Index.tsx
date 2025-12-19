@@ -38,9 +38,9 @@ const Index = () => {
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ type: "spring", stiffness: 200, delay: 0.2 }}
-            className="w-24 h-24 mx-auto rounded-3xl bg-gradient-primary flex items-center justify-center shadow-glow-teal"
+            className="w-32 h-32 mx-auto rounded-3xl bg-gradient-primary flex items-center justify-center shadow-glow-teal"
           >
-            <MapPin className="w-12 h-12 text-primary-foreground" />
+            <MapPin className="w-16 h-16 text-primary-foreground" />
           </motion.div>
 
           <div className="space-y-4">
