@@ -165,28 +165,30 @@ export const useLocationAlerts = () => {
     }
   }, [alerts]);
 
-  // Request notification permission
+  // Request notification permission - silently fail if not supported
   const requestNotificationPermission = useCallback(async () => {
-    if (!("Notification" in window)) {
-      toast({
-        title: "Notifikasi tidak didukung",
-        description: "Browser Anda tidak mendukung notifikasi",
-        variant: "destructive",
-      });
+    // Check if we're in a secure context and notifications are available
+    if (typeof window === 'undefined' || !("Notification" in window)) {
+      // Silently return false - don't show error toast
+      console.log("Notifications not supported in this environment");
       return false;
     }
 
-    if (Notification.permission === "granted") {
-      return true;
-    }
+    try {
+      if (Notification.permission === "granted") {
+        return true;
+      }
 
-    if (Notification.permission !== "denied") {
-      const permission = await Notification.requestPermission();
-      return permission === "granted";
+      if (Notification.permission !== "denied") {
+        const permission = await Notification.requestPermission();
+        return permission === "granted";
+      }
+    } catch (error) {
+      console.log("Error requesting notification permission:", error);
     }
 
     return false;
-  }, [toast]);
+  }, []);
 
   // Trigger browser notification
   const triggerNotification = (alert: LocationAlert) => {

@@ -26,6 +26,7 @@ import { useLocationHistory, LocationHistoryPoint } from "@/hooks/useLocationHis
 import { usePlaceInfo } from "@/hooks/usePlaceInfo";
 import { AddLocationAlert, LocationAlertList } from "@/components/LocationAlertComponents";
 import { useFriends } from "@/hooks/useFriends";
+import { useSOS } from "@/hooks/useSOS";
 import { toast } from "sonner";
 
 interface FriendLocationDetailProps {
@@ -64,6 +65,7 @@ export const FriendLocationDetail = ({
 }: FriendLocationDetailProps) => {
   const navigate = useNavigate();
   const { myInviteCode } = useFriends();
+  const { sendSOS, isSending: isSendingSOS } = useSOS();
   const [activeTab, setActiveTab] = useState<"location" | "history" | "places" | "alerts">("location");
   const [showAddAlert, setShowAddAlert] = useState(false);
   const [historyData, setHistoryData] = useState<LocationHistoryPoint[]>([]);
@@ -98,11 +100,8 @@ export const FriendLocationDetail = ({
     }
   };
 
-  const handleSOS = () => {
-    toast.error('🚨 SOS Alert Sent!', {
-      description: 'Your current location has been shared with all friends.',
-      duration: 5000,
-    });
+  const handleSOS = async () => {
+    await sendSOS();
   };
 
   // Load place info and street view image
@@ -396,10 +395,17 @@ export const FriendLocationDetail = ({
                   
                   <button
                     onClick={handleSOS}
-                    className="flex flex-col items-center gap-2 py-4 border border-destructive/50 rounded-xl hover:bg-destructive/10 transition-colors"
+                    disabled={isSendingSOS}
+                    className="flex flex-col items-center gap-2 py-4 border border-destructive/50 rounded-xl hover:bg-destructive/10 transition-colors disabled:opacity-50"
                   >
-                    <AlertTriangle className="w-6 h-6 text-destructive" />
-                    <span className="text-xs text-destructive font-medium">SOS</span>
+                    {isSendingSOS ? (
+                      <Loader2 className="w-6 h-6 text-destructive animate-spin" />
+                    ) : (
+                      <AlertTriangle className="w-6 h-6 text-destructive" />
+                    )}
+                    <span className="text-xs text-destructive font-medium">
+                      {isSendingSOS ? "Mengirim..." : "SOS"}
+                    </span>
                   </button>
                   
                   <button
