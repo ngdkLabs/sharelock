@@ -28,6 +28,17 @@ import { AddLocationAlert, LocationAlertList } from "@/components/LocationAlertC
 import { useFriends } from "@/hooks/useFriends";
 import { useSOS } from "@/hooks/useSOS";
 import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface FriendLocationDetailProps {
   friend: {
@@ -393,20 +404,44 @@ export const FriendLocationDetail = ({
                     <span className="text-xs text-foreground">Share</span>
                   </button>
                   
-                  <button
-                    onClick={handleSOS}
-                    disabled={isSendingSOS}
-                    className="flex flex-col items-center gap-2 py-4 border border-destructive/50 rounded-xl hover:bg-destructive/10 transition-colors disabled:opacity-50"
-                  >
-                    {isSendingSOS ? (
-                      <Loader2 className="w-6 h-6 text-destructive animate-spin" />
-                    ) : (
-                      <AlertTriangle className="w-6 h-6 text-destructive" />
-                    )}
-                    <span className="text-xs text-destructive font-medium">
-                      {isSendingSOS ? "Mengirim..." : "SOS"}
-                    </span>
-                  </button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <button
+                        disabled={isSendingSOS}
+                        className="flex flex-col items-center gap-2 py-4 border border-destructive/50 rounded-xl hover:bg-destructive/10 transition-colors disabled:opacity-50"
+                      >
+                        {isSendingSOS ? (
+                          <Loader2 className="w-6 h-6 text-destructive animate-spin" />
+                        ) : (
+                          <AlertTriangle className="w-6 h-6 text-destructive" />
+                        )}
+                        <span className="text-xs text-destructive font-medium">
+                          {isSendingSOS ? "Mengirim..." : "SOS"}
+                        </span>
+                      </button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent className="bg-card border-border">
+                      <AlertDialogHeader>
+                        <AlertDialogTitle className="flex items-center gap-2 text-destructive">
+                          <AlertTriangle className="w-5 h-5" />
+                          Kirim SOS Darurat?
+                        </AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Lokasi Anda saat ini akan dikirim ke <strong>semua teman</strong> sebagai pesan darurat. 
+                          Gunakan fitur ini hanya dalam situasi darurat.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel className="border-border">Batal</AlertDialogCancel>
+                        <AlertDialogAction 
+                          onClick={handleSOS}
+                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                          🚨 Kirim SOS
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                   
                   <button
                     onClick={() => openInMaps(friend.lat, friend.lng)}
