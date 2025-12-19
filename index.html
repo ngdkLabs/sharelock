@@ -3,10 +3,22 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <!-- TODO: Set the document title to the name of your application -->
-    <title>Lovable App</title>
-    <meta name="description" content="Lovable Generated Project" />
-    <meta name="author" content="Lovable" />
+    
+    <!-- Content Security Policy to prevent XSS attacks -->
+    <meta http-equiv="Content-Security-Policy" content="
+      default-src 'self';
+      script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.supabase.co;
+      style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+      font-src 'self' https://fonts.gstatic.com;
+      img-src 'self' data: blob: https://*.supabase.co https://*.tile.openstreetmap.org;
+      connect-src 'self' https://*.supabase.co wss://*.supabase.co;
+      frame-ancestors 'self';
+      base-uri 'self';
+      form-action 'self';
+    ">
+    
+    <title>Location Sharing App</title>
+    <meta name="description" content="Share your location with friends in real-time" />
 
     <!-- TODO: Update og:title to match your application name -->
     <meta property="og:title" content="Lovable App" />
