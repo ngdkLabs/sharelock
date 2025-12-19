@@ -1,63 +1,261 @@
+import { useState, useRef } from "react";
 import { motion } from "framer-motion";
-import { Settings, Bell, Shield, LogOut, ChevronRight, MapPin } from "lucide-react";
+import { Settings, Bell, Shield, LogOut, ChevronRight, MapPin, Camera, Loader2, Edit2 } from "lucide-react";
 import { UserAvatar } from "@/components/UserAvatar";
 import { BottomNavigation } from "@/components/BottomNavigation";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
+import { Input } from "@/components/ui/input";
+import { useAuth } from "@/contexts/AuthContext";
+import { useProfile } from "@/hooks/useProfile";
+import { useFriends } from "@/hooks/useFriends";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 const ProfilePage = () => {
+  const navigate = useNavigate();
+  const { user, signOut } = useAuth();
+  const { profile, loading, updateProfile, uploadAvatar } = useProfile();
+  const { friends } = useFriends();
+  const [isEditing, setIsEditing] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [editForm, setEditForm] = useState({
+    username: "",
+    full_name: "",
+  });
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/");
+  };
+
+  const handleAvatarClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select an image file");
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Image must be less than 5MB");
+      return;
+    }
+
+    setIsUploading(true);
+    const { error } = await uploadAvatar(file);
+    setIsUploading(false);
+
+    if (error) {
+      toast.error(error);
+    } else {
+      toast.success("Avatar updated!");
+    }
+  };
+
+  const handleEditOpen = () => {
+    setEditForm({
+      username: profile?.username || "",
+      full_name: profile?.full_name || "",
+    });
+    setIsEditing(true);
+  };
+
+  const handleSaveProfile = async () => {
+    const { error } = await updateProfile({
+      username: editForm.username,
+      full_name: editForm.full_name,
+    });
+
+    if (error) {
+      toast.error(error);
+    } else {
+      toast.success("Profile updated!");
+      setIsEditing(false);
+    }
+  };
+
+  const handleToggleSharing = async (checked: boolean) => {
+    await updateProfile({ is_sharing_location: checked });
+    toast.success(checked ? "Location sharing enabled" : "Location sharing disabled");
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background pb-24">
       <div className="px-4 py-6 space-y-6">
         {/* Header */}
         <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="text-center space-y-4">
-          <UserAvatar name="John Doe" size="xl" showRing isOnline />
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">John Doe</h1>
-            <p className="text-muted-foreground">@johndoe</p>
+          <div className="relative inline-block">
+            <button onClick={handleAvatarClick} className="relative group">
+              {profile?.avatar_url ? (
+                <img
+                  src={profile.avatar_url}
+                  alt={profile.username}
+                  className="w-24 h-24 rounded-full object-cover border-4 border-primary"
+                />
+              ) : (
+                <UserAvatar name={profile?.username || "User"} size="xl" showRing />
+              )}
+              <div className="absolute inset-0 rounded-full bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                {isUploading ? (
+                  <Loader2 className="w-6 h-6 text-white animate-spin" />
+                ) : (
+                  <Camera className="w-6 h-6 text-white" />
+                )}
+              </div>
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleFileChange}
+              className="hidden"
+            />
           </div>
-          <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-            <MapPin className="w-4 h-4 text-primary" />
-            <span>Location sharing active</span>
+          <div>
+            <div className="flex items-center justify-center gap-2">
+              <h1 className="text-2xl font-bold text-foreground">
+                {profile?.full_name || profile?.username}
+              </h1>
+              <button onClick={handleEditOpen} className="text-muted-foreground hover:text-foreground">
+                <Edit2 className="w-4 h-4" />
+              </button>
+            </div>
+            <p className="text-muted-foreground">@{profile?.username}</p>
+          </div>
+          <div className="flex items-center justify-center gap-2 text-sm">
+            {profile?.is_sharing_location ? (
+              <>
+                <MapPin className="w-4 h-4 text-teal" />
+                <span className="text-teal">Location sharing active</span>
+              </>
+            ) : (
+              <>
+                <MapPin className="w-4 h-4 text-muted-foreground" />
+                <span className="text-muted-foreground">Location sharing off</span>
+              </>
+            )}
           </div>
         </motion.div>
 
         {/* Quick Stats */}
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="grid grid-cols-3 gap-3">
-          {[{ label: "Friends", value: "12" }, { label: "Days Active", value: "45" }, { label: "Check-ins", value: "128" }].map((stat) => (
-            <div key={stat.label} className="glass rounded-2xl p-4 text-center">
-              <p className="text-2xl font-bold gradient-text">{stat.value}</p>
-              <p className="text-xs text-muted-foreground">{stat.label}</p>
-            </div>
-          ))}
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="grid grid-cols-2 gap-3">
+          <div className="glass rounded-2xl p-4 text-center">
+            <p className="text-2xl font-bold gradient-text">{friends.length}</p>
+            <p className="text-xs text-muted-foreground">Friends</p>
+          </div>
+          <div className="glass rounded-2xl p-4 text-center">
+            <p className="text-2xl font-bold gradient-text-warm">
+              {profile?.is_sharing_location ? "On" : "Off"}
+            </p>
+            <p className="text-xs text-muted-foreground">Sharing</p>
+          </div>
         </motion.div>
 
         {/* Settings */}
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="space-y-3">
           <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Settings</h2>
           <div className="glass rounded-2xl divide-y divide-border">
-            {[
-              { icon: MapPin, label: "Share Location", toggle: true },
-              { icon: Bell, label: "Notifications", toggle: true },
-              { icon: Shield, label: "Privacy" },
-              { icon: Settings, label: "Preferences" },
-            ].map((item) => (
-              <div key={item.label} className="flex items-center justify-between p-4">
-                <div className="flex items-center gap-3">
-                  <item.icon className="w-5 h-5 text-muted-foreground" />
-                  <span className="font-medium text-foreground">{item.label}</span>
-                </div>
-                {item.toggle ? <Switch defaultChecked /> : <ChevronRight className="w-5 h-5 text-muted-foreground" />}
+            <div className="flex items-center justify-between p-4">
+              <div className="flex items-center gap-3">
+                <MapPin className="w-5 h-5 text-muted-foreground" />
+                <span className="font-medium text-foreground">Share Location</span>
               </div>
-            ))}
+              <Switch 
+                checked={profile?.is_sharing_location ?? true} 
+                onCheckedChange={handleToggleSharing}
+              />
+            </div>
+            <div className="flex items-center justify-between p-4">
+              <div className="flex items-center gap-3">
+                <Bell className="w-5 h-5 text-muted-foreground" />
+                <span className="font-medium text-foreground">Notifications</span>
+              </div>
+              <Switch defaultChecked />
+            </div>
+            <button className="w-full flex items-center justify-between p-4 hover:bg-muted/50 transition-colors">
+              <div className="flex items-center gap-3">
+                <Shield className="w-5 h-5 text-muted-foreground" />
+                <span className="font-medium text-foreground">Privacy</span>
+              </div>
+              <ChevronRight className="w-5 h-5 text-muted-foreground" />
+            </button>
+            <button className="w-full flex items-center justify-between p-4 hover:bg-muted/50 transition-colors">
+              <div className="flex items-center gap-3">
+                <Settings className="w-5 h-5 text-muted-foreground" />
+                <span className="font-medium text-foreground">Preferences</span>
+              </div>
+              <ChevronRight className="w-5 h-5 text-muted-foreground" />
+            </button>
           </div>
         </motion.div>
 
-        <Button variant="outline" className="w-full h-12 text-destructive border-destructive/30 hover:bg-destructive/10">
+        {/* Account info */}
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="glass rounded-2xl p-4">
+          <p className="text-xs text-muted-foreground">Signed in as</p>
+          <p className="text-sm font-medium text-foreground">{user?.email}</p>
+        </motion.div>
+
+        <Button 
+          variant="outline" 
+          className="w-full h-12 text-destructive border-destructive/30 hover:bg-destructive/10"
+          onClick={handleSignOut}
+        >
           <LogOut className="w-5 h-5" />
           Sign Out
         </Button>
       </div>
+
+      {/* Edit Profile Dialog */}
+      <Dialog open={isEditing} onOpenChange={setIsEditing}>
+        <DialogContent className="glass">
+          <DialogHeader>
+            <DialogTitle>Edit Profile</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div>
+              <label className="text-sm font-medium text-muted-foreground">Username</label>
+              <Input
+                value={editForm.username}
+                onChange={(e) => setEditForm({ ...editForm, username: e.target.value })}
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-muted-foreground">Full Name</label>
+              <Input
+                value={editForm.full_name}
+                onChange={(e) => setEditForm({ ...editForm, full_name: e.target.value })}
+                className="mt-1"
+              />
+            </div>
+            <Button variant="gradient" className="w-full" onClick={handleSaveProfile}>
+              Save Changes
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <BottomNavigation />
     </div>
   );
