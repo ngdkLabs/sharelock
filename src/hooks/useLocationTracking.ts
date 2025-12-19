@@ -3,6 +3,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { RealtimeChannel } from "@supabase/supabase-js";
 
+// Minimum distance in meters to record a new history point
+const MIN_DISTANCE_METERS = 50;
+// Minimum time between history saves in ms
+const MIN_TIME_BETWEEN_SAVES_MS = 60000; // 1 minute
+
 interface UserLocation {
   user_id: string;
   latitude: number;
@@ -30,6 +35,56 @@ export const useLocationTracking = () => {
   const [error, setError] = useState<string | null>(null);
   const watchIdRef = useRef<number | null>(null);
   const channelRef = useRef<RealtimeChannel | null>(null);
+  const lastHistorySaveRef = useRef<{ lat: number; lng: number; time: number } | null>(null);
+
+  // Calculate distance between two points in meters
+  const calculateDistance = useCallback((lat1: number, lon1: number, lat2: number, lon2: number): number => {
+    const R = 6371e3; // Earth's radius in meters
+    const φ1 = (lat1 * Math.PI) / 180;
+    const φ2 = (lat2 * Math.PI) / 180;
+    const Δφ = ((lat2 - lat1) * Math.PI) / 180;
+    const Δλ = ((lon2 - lon1) * Math.PI) / 180;
+
+    const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+              Math.cos(φ1) * Math.cos(φ2) *
+              Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+    return R * c;
+  }, []);
+
+  // Save location to history
+  const saveToHistory = useCallback(async (lat: number, lng: number, accuracy?: number) => {
+    if (!user) return;
+
+    const now = Date.now();
+    const last = lastHistorySaveRef.current;
+
+    // Check if we should save (enough distance or time has passed)
+    if (last) {
+      const distance = calculateDistance(last.lat, last.lng, lat, lng);
+      const timePassed = now - last.time;
+
+      if (distance < MIN_DISTANCE_METERS && timePassed < MIN_TIME_BETWEEN_SAVES_MS) {
+        return; // Skip save
+      }
+    }
+
+    try {
+      await supabase.from("location_history").insert({
+        user_id: user.id,
+        latitude: lat,
+        longitude: lng,
+        accuracy: accuracy || null,
+      });
+
+      lastHistorySaveRef.current = { lat, lng, time: now };
+    } catch (err) {
+      if (import.meta.env.DEV) {
+        console.error("Error saving to history:", err);
+      }
+    }
+  }, [user, calculateDistance]);
 
   // Update location in database
   const updateLocationInDb = useCallback(async (position: GeolocationPosition) => {
@@ -68,6 +123,13 @@ export const useLocationTracking = () => {
         setCurrentLocation(position);
         setError(null);
         updateLocationInDb(position);
+        
+        // Also save to history
+        saveToHistory(
+          position.coords.latitude,
+          position.coords.longitude,
+          position.coords.accuracy
+        );
       },
       (err) => {
         if (import.meta.env.DEV) {
@@ -81,7 +143,7 @@ export const useLocationTracking = () => {
         maximumAge: 5000,
       }
     );
-  }, [updateLocationInDb]);
+  }, [updateLocationInDb, saveToHistory]);
 
   // Stop tracking
   const stopTracking = useCallback(() => {

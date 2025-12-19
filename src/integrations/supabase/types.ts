@@ -65,6 +65,36 @@ export type Database = {
         }
         Relationships: []
       }
+      location_history: {
+        Row: {
+          accuracy: number | null
+          address: string | null
+          id: string
+          latitude: number
+          longitude: number
+          recorded_at: string
+          user_id: string
+        }
+        Insert: {
+          accuracy?: number | null
+          address?: string | null
+          id?: string
+          latitude: number
+          longitude: number
+          recorded_at?: string
+          user_id: string
+        }
+        Update: {
+          accuracy?: number | null
+          address?: string | null
+          id?: string
+          latitude?: number
+          longitude?: number
+          recorded_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
