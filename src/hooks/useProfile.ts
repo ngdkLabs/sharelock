@@ -9,6 +9,7 @@ interface Profile {
   full_name: string | null;
   avatar_url: string | null;
   is_sharing_location: boolean;
+  sos_alarm_enabled: boolean;
 }
 
 export const useProfile = () => {
