@@ -163,26 +163,17 @@ const ChatWindow = ({ friendId, friendName, friendAvatar, onClose }: ChatWindowP
                     {/* Location message */}
                     {hasLocation && (
                       <div 
-                        className="cursor-pointer"
+                        className="px-4 py-3 cursor-pointer"
                         onClick={() => openLocationInMap(msg.location_lat!, msg.location_lng!)}
                       >
-                        <img 
-                          src={`https://api.mapbox.com/styles/v1/mapbox/streets-v12/static/pin-s+ef4444(${msg.location_lng},${msg.location_lat})/${msg.location_lng},${msg.location_lat},14,0/300x150@2x?access_token=pk.eyJ1IjoibG92YWJsZS1kZXYiLCJhIjoiY2x4MjJ5Z2Q1MDF2dDJrcHRmcGdyNHY0ZCJ9.HkVfFV1cC_hF8P4B3L_aKw`}
-                          alt="Location"
-                          className="w-full h-32 object-cover"
-                          onError={(e) => {
-                            e.currentTarget.src = `https://maps.googleapis.com/maps/api/staticmap?center=${msg.location_lat},${msg.location_lng}&zoom=14&size=300x150&markers=color:red%7C${msg.location_lat},${msg.location_lng}&key=`;
-                          }}
-                        />
-                        <div className="px-4 py-2">
-                          <div className="flex items-center gap-1.5 text-sm font-medium">
-                            <MapPin className="w-4 h-4" />
-                            Lokasi Dibagikan
-                          </div>
-                          {msg.location_address && (
-                            <p className="text-xs opacity-80 mt-1">{msg.location_address}</p>
-                          )}
+                        <div className="flex items-center gap-2 text-sm font-medium">
+                          <MapPin className="w-5 h-5" />
+                          <span>📍 Lokasi Dibagikan</span>
                         </div>
+                        {msg.location_address && (
+                          <p className="text-xs opacity-80 mt-1 ml-7">{msg.location_address}</p>
+                        )}
+                        <p className="text-xs opacity-60 mt-1 ml-7 underline">Buka di Google Maps</p>
                       </div>
                     )}
 
