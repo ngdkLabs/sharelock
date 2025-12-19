@@ -18,10 +18,10 @@ export const BottomNavigation = () => {
     <motion.nav
       initial={{ y: 100 }}
       animate={{ y: 0 }}
-      className="fixed bottom-0 left-0 right-0 z-50 pb-safe"
+      className="fixed bottom-0 left-0 right-0 z-50 pb-safe pointer-events-none"
     >
-      <div className="mx-4 mb-4">
-        <div className="glass rounded-2xl p-2 flex justify-around items-center shadow-card">
+      <div className="mx-4 mb-4 pointer-events-auto">
+        <div className="bg-card/95 backdrop-blur-xl rounded-2xl p-2 flex justify-around items-center shadow-card border border-border/50">
           {navItems.map((item) => {
             const isActive = location.pathname === item.path;
             const Icon = item.icon;
