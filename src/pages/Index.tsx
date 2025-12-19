@@ -40,16 +40,16 @@ const Index = () => {
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ type: "spring", stiffness: 200, delay: 0.2 }}
-            className="w-32 h-32 mx-auto"
+            className="w-44 h-44 mx-auto"
           >
             <img src={logoImage} alt="LocateMe Logo" className="w-full h-full object-contain" />
           </motion.div>
 
           <div className="space-y-4">
-            <h1 className="text-4xl md:text-5xl font-bold text-foreground">
-              <span className="gradient-text">LocateMe</span>
+            <h1 className="text-4xl md:text-5xl font-bold text-white">
+              <span className="text-primary">LocateMe</span>
             </h1>
-            <p className="text-lg text-muted-foreground">
+            <p className="text-lg text-white/70">
               Share your location with family & friends in real-time
             </p>
           </div>
@@ -68,11 +68,11 @@ const Index = () => {
                 transition={{ delay: 0.4 + i * 0.1 }}
                 className="flex flex-col items-center gap-2"
               >
-                <div className="w-14 h-14 rounded-2xl bg-muted flex items-center justify-center">
+                <div className="w-14 h-14 rounded-2xl bg-white/10 backdrop-blur-sm flex items-center justify-center border border-white/20">
                   <feature.icon className="w-6 h-6 text-primary" />
                 </div>
-                <span className="text-xs font-medium text-foreground">{feature.label}</span>
-                <span className="text-[10px] text-muted-foreground">{feature.desc}</span>
+                <span className="text-xs font-medium text-white">{feature.label}</span>
+                <span className="text-[10px] text-white/60">{feature.desc}</span>
               </motion.div>
             ))}
           </div>
@@ -96,12 +96,12 @@ const Index = () => {
               <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </Button>
             {user && (
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-white/70">
                 Welcome back! You're signed in.
               </p>
             )}
             {!user && (
-              <p className="text-xs text-muted-foreground">
+              <p className="text-xs text-white/60">
                 Create a free account to start sharing
               </p>
             )}

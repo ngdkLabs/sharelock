@@ -6,66 +6,66 @@
 
 @layer base {
   :root {
-    --background: 210 20% 98%;
-    --foreground: 220 25% 15%;
+    --background: 140 20% 20%;
+    --foreground: 0 0% 100%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 220 25% 15%;
+    --card: 140 15% 25%;
+    --card-foreground: 0 0% 100%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 220 25% 15%;
+    --popover: 140 15% 22%;
+    --popover-foreground: 0 0% 100%;
 
-    --primary: 145 70% 42%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 145 70% 50%;
+    --primary-foreground: 140 30% 15%;
 
-    --secondary: 210 15% 96%;
-    --secondary-foreground: 220 25% 25%;
+    --secondary: 140 15% 30%;
+    --secondary-foreground: 0 0% 95%;
 
-    --muted: 210 15% 94%;
-    --muted-foreground: 220 10% 50%;
+    --muted: 140 15% 28%;
+    --muted-foreground: 140 10% 70%;
 
-    --accent: 200 85% 50%;
+    --accent: 145 60% 45%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 210 15% 90%;
-    --input: 210 15% 92%;
-    --ring: 145 70% 42%;
+    --border: 140 15% 35%;
+    --input: 140 15% 32%;
+    --ring: 145 70% 50%;
 
     --radius: 0.75rem;
 
-    /* iSharing-style colors */
-    --green: 145 70% 42%;
-    --green-light: 145 70% 95%;
-    --green-glow: 145 70% 55%;
+    /* Custom colors */
+    --green: 145 70% 50%;
+    --green-light: 145 40% 35%;
+    --green-glow: 145 70% 60%;
     --blue: 200 85% 50%;
-    --blue-light: 200 85% 95%;
+    --blue-light: 200 50% 35%;
     --orange: 25 95% 55%;
-    --orange-light: 25 95% 95%;
+    --orange-light: 25 60% 35%;
     --red: 0 72% 51%;
-    --red-light: 0 72% 95%;
+    --red-light: 0 50% 35%;
     
     /* Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(145, 70%, 42%), hsl(165, 70%, 40%));
+    --gradient-primary: linear-gradient(135deg, hsl(145, 70%, 50%), hsl(165, 70%, 45%));
     --gradient-secondary: linear-gradient(135deg, hsl(200, 85%, 50%), hsl(220, 80%, 55%));
     --gradient-accent: linear-gradient(135deg, hsl(25, 95%, 55%), hsl(35, 95%, 50%));
     
     /* Shadows */
-    --shadow-soft: 0 2px 8px -2px hsl(220 25% 15% / 0.08);
-    --shadow-card: 0 4px 16px -4px hsl(220 25% 15% / 0.1);
-    --shadow-elevated: 0 8px 24px -6px hsl(220 25% 15% / 0.12);
-    --shadow-glow-green: 0 4px 20px hsl(145 70% 42% / 0.25);
+    --shadow-soft: 0 2px 8px -2px hsl(0 0% 0% / 0.2);
+    --shadow-card: 0 4px 16px -4px hsl(0 0% 0% / 0.25);
+    --shadow-elevated: 0 8px 24px -6px hsl(0 0% 0% / 0.3);
+    --shadow-glow-green: 0 4px 20px hsl(145 70% 50% / 0.35);
 
-    --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 220 25% 25%;
-    --sidebar-primary: 145 70% 42%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 210 15% 96%;
-    --sidebar-accent-foreground: 220 25% 25%;
-    --sidebar-border: 210 15% 90%;
-    --sidebar-ring: 145 70% 42%;
+    --sidebar-background: 140 15% 22%;
+    --sidebar-foreground: 0 0% 95%;
+    --sidebar-primary: 145 70% 50%;
+    --sidebar-primary-foreground: 140 30% 15%;
+    --sidebar-accent: 140 15% 28%;
+    --sidebar-accent-foreground: 0 0% 95%;
+    --sidebar-border: 140 15% 35%;
+    --sidebar-ring: 145 70% 50%;
   }
 }
 

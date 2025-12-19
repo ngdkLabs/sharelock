@@ -82,7 +82,7 @@ const AuthPage = () => {
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           transition={{ type: "spring", stiffness: 200 }}
-          className="w-28 h-28 mb-8"
+          className="w-40 h-40 mb-8"
         >
           <img src={logoImage} alt="LocateMe Logo" className="w-full h-full object-contain" />
         </motion.div>
@@ -93,10 +93,10 @@ const AuthPage = () => {
           className="w-full max-w-sm"
         >
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-foreground">
+            <h1 className="text-3xl font-bold text-white">
               {isLogin ? "Welcome back" : "Create account"}
             </h1>
-            <p className="text-muted-foreground mt-2">
+            <p className="text-white/70 mt-2">
               {isLogin ? "Sign in to continue" : "Start sharing your location"}
             </p>
           </div>
@@ -105,56 +105,56 @@ const AuthPage = () => {
             {!isLogin && (
               <>
                 <div className="relative">
-                  <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/50" />
                   <Input
                     type="text"
                     placeholder="Username"
                     value={form.username}
                     onChange={(e) => setForm({ ...form, username: e.target.value })}
-                    className="pl-12 h-14 rounded-2xl bg-muted border-0 text-foreground"
+                    className="pl-12 h-14 rounded-2xl bg-white/10 border border-white/20 text-white placeholder:text-white/50 focus:border-primary focus:ring-primary"
                     required
                   />
                 </div>
                 <div className="relative">
-                  <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/50" />
                   <Input
                     type="text"
                     placeholder="Full Name (optional)"
                     value={form.fullName}
                     onChange={(e) => setForm({ ...form, fullName: e.target.value })}
-                    className="pl-12 h-14 rounded-2xl bg-muted border-0 text-foreground"
+                    className="pl-12 h-14 rounded-2xl bg-white/10 border border-white/20 text-white placeholder:text-white/50 focus:border-primary focus:ring-primary"
                   />
                 </div>
               </>
             )}
 
             <div className="relative">
-              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/50" />
               <Input
                 type="email"
                 placeholder="Email"
                 value={form.email}
                 onChange={(e) => setForm({ ...form, email: e.target.value })}
-                className="pl-12 h-14 rounded-2xl bg-muted border-0 text-foreground"
+                className="pl-12 h-14 rounded-2xl bg-white/10 border border-white/20 text-white placeholder:text-white/50 focus:border-primary focus:ring-primary"
                 required
               />
             </div>
 
             <div className="relative">
-              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/50" />
               <Input
                 type={showPassword ? "text" : "password"}
                 placeholder="Password"
                 value={form.password}
                 onChange={(e) => setForm({ ...form, password: e.target.value })}
-                className="pl-12 pr-12 h-14 rounded-2xl bg-muted border-0 text-foreground"
+                className="pl-12 pr-12 h-14 rounded-2xl bg-white/10 border border-white/20 text-white placeholder:text-white/50 focus:border-primary focus:ring-primary"
                 required
                 minLength={6}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground"
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-white/50 hover:text-white"
               >
                 {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
@@ -181,7 +181,7 @@ const AuthPage = () => {
           <div className="mt-6 text-center">
             <button
               onClick={() => setIsLogin(!isLogin)}
-              className="text-muted-foreground hover:text-foreground transition-colors"
+              className="text-white/70 hover:text-white transition-colors"
             >
               {isLogin ? (
                 <>Don't have an account? <span className="text-primary font-semibold">Sign up</span></>
