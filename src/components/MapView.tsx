@@ -14,12 +14,20 @@ interface MapUser {
   updatedAt?: string;
 }
 
+interface TrailPoint {
+  lat: number;
+  lng: number;
+  recorded_at: string;
+}
+
 interface MapViewProps {
   users: MapUser[];
   center?: [number, number];
   zoom?: number;
   className?: string;
   onUserClick?: (userId: string) => void;
+  trail?: TrailPoint[];
+  trailColor?: string;
 }
 
 const createCustomIcon = (user: MapUser) => {
@@ -58,10 +66,13 @@ export const MapView = ({
   zoom = 14,
   className,
   onUserClick,
+  trail,
+  trailColor = "#14b8a6",
 }: MapViewProps) => {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
   const markersRef = useRef<L.Marker[]>([]);
+  const polylineRef = useRef<L.Polyline | null>(null);
   const [isMapReady, setIsMapReady] = useState(false);
 
   // Initialize map
@@ -133,6 +144,48 @@ export const MapView = ({
       mapInstanceRef.current.fitBounds(bounds, { padding: [50, 50] });
     }
   }, [users, isMapReady, onUserClick]);
+
+  // Update trail/polyline
+  useEffect(() => {
+    if (!mapInstanceRef.current || !isMapReady) return;
+
+    // Clear existing polyline
+    if (polylineRef.current) {
+      polylineRef.current.remove();
+      polylineRef.current = null;
+    }
+
+    // Add new polyline if trail exists
+    if (trail && trail.length > 1) {
+      const latlngs: L.LatLngExpression[] = trail.map((p) => [p.lat, p.lng]);
+      
+      polylineRef.current = L.polyline(latlngs, {
+        color: trailColor,
+        weight: 4,
+        opacity: 0.8,
+        smoothFactor: 1,
+        lineCap: "round",
+        lineJoin: "round",
+      }).addTo(mapInstanceRef.current);
+
+      // Add circle markers for each point
+      trail.forEach((point, index) => {
+        const isFirst = index === 0;
+        const isLast = index === trail.length - 1;
+        
+        if (isFirst || isLast || index % 5 === 0) {
+          L.circleMarker([point.lat, point.lng], {
+            radius: isFirst || isLast ? 8 : 4,
+            fillColor: isFirst ? "#22c55e" : isLast ? "#ef4444" : trailColor,
+            color: "white",
+            weight: 2,
+            opacity: 1,
+            fillOpacity: 1,
+          }).addTo(mapInstanceRef.current!);
+        }
+      });
+    }
+  }, [trail, trailColor, isMapReady]);
 
   return (
     <motion.div

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Crosshair, Plus, Minus, Users, Navigation2, Battery, MapPin, X, Clock, Loader2 } from "lucide-react";
+import { Crosshair, Plus, Minus, Users, Navigation2, Battery, MapPin, X, Clock, Loader2, Route } from "lucide-react";
 import { MapView } from "@/components/MapView";
 import { BottomNavigation } from "@/components/BottomNavigation";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,7 @@ import { useLocationTracking } from "@/hooks/useLocationTracking";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/hooks/useProfile";
 import { useReverseGeocode } from "@/hooks/useReverseGeocode";
+import { useLocationHistory, LocationHistoryPoint } from "@/hooks/useLocationHistory";
 import { formatDistanceToNow } from "date-fns";
 
 interface SelectedUser {
@@ -21,13 +22,22 @@ interface SelectedUser {
   address?: string;
 }
 
+interface TrailPoint {
+  lat: number;
+  lng: number;
+  recorded_at: string;
+}
+
 const MapPage = () => {
   const { user } = useAuth();
   const { profile } = useProfile();
   const { currentLocation, friendsLocations, isTracking, error } = useLocationTracking();
   const { getAddress, isLoading: isLoadingAddress } = useReverseGeocode();
+  const { getLocationHistory, isLoading: isLoadingHistory } = useLocationHistory();
   const [mapCenter, setMapCenter] = useState<[number, number]>([-6.2088, 106.8456]);
   const [selectedUser, setSelectedUser] = useState<SelectedUser | null>(null);
+  const [trail, setTrail] = useState<TrailPoint[]>([]);
+  const [showingTrailFor, setShowingTrailFor] = useState<string | null>(null);
 
   useEffect(() => {
     if (currentLocation) {
@@ -89,6 +99,27 @@ const MapPage = () => {
 
   const closeUserDetail = () => {
     setSelectedUser(null);
+    setTrail([]);
+    setShowingTrailFor(null);
+  };
+
+  const handleShowHistory = async (userId: string) => {
+    if (showingTrailFor === userId) {
+      // Toggle off
+      setTrail([]);
+      setShowingTrailFor(null);
+      return;
+    }
+
+    const history = await getLocationHistory(userId, 24);
+    const trailPoints: TrailPoint[] = history.map((h) => ({
+      lat: h.latitude,
+      lng: h.longitude,
+      recorded_at: h.recorded_at,
+    }));
+    
+    setTrail(trailPoints);
+    setShowingTrailFor(userId);
   };
 
   return (
@@ -100,6 +131,8 @@ const MapPage = () => {
           center={mapCenter} 
           className="h-full w-full" 
           onUserClick={handleUserClick}
+          trail={trail}
+          trailColor={showingTrailFor === user?.id ? "#14b8a6" : "#f87171"}
         />
       </div>
 
@@ -284,6 +317,29 @@ const MapPage = () => {
                     <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground/70 font-mono">
                       <span>{selectedUser.lat.toFixed(6)}, {selectedUser.lng.toFixed(6)}</span>
                     </div>
+
+                    {/* Show History Button */}
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleShowHistory(selectedUser.id);
+                      }}
+                      className={`mt-3 flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
+                        showingTrailFor === selectedUser.id
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-muted hover:bg-muted/80 text-foreground"
+                      }`}
+                    >
+                      {isLoadingHistory ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Route className="w-4 h-4" />
+                      )}
+                      <span>
+                        {showingTrailFor === selectedUser.id ? "Sembunyikan Riwayat" : "Lihat Riwayat 24 Jam"}
+                      </span>
+                    </button>
                   </div>
                 </div>
               </div>
