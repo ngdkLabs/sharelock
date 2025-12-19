@@ -167,7 +167,9 @@ export const useFriends = () => {
       .or(`user_id.eq.${user.id},friend_id.eq.${user.id}`);
 
     if (error) {
-      console.error("Error fetching friends:", error);
+      if (import.meta.env.DEV) {
+        console.error("Error fetching friends:", error);
+      }
       setLoading(false);
       return;
     }
