@@ -208,75 +208,87 @@ const MapPage = () => {
       {/* User Detail Card */}
       <AnimatePresence>
         {selectedUser && (
-          <motion.div
-            initial={{ opacity: 0, y: 100 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 100 }}
-            className="absolute bottom-24 left-4 right-4 z-40"
-          >
-            <div className="bg-card/95 backdrop-blur-xl rounded-3xl p-5 shadow-card border border-border/50">
-              <div className="flex items-start gap-4">
-                {/* Avatar */}
-                <div className="relative flex-shrink-0">
-                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-accent flex items-center justify-center text-primary-foreground font-bold text-xl overflow-hidden">
-                    {selectedUser.avatarUrl ? (
-                      <img src={selectedUser.avatarUrl} className="w-full h-full object-cover" alt={selectedUser.name} />
-                    ) : (
-                      selectedUser.name.charAt(0).toUpperCase()
-                    )}
-                  </div>
-                  <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-green-500 border-2 border-card" />
-                </div>
-
-                {/* Info */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-lg font-bold text-foreground truncate">
-                      {selectedUser.isCurrentUser ? "Lokasi Anda" : selectedUser.name}
-                    </h3>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 rounded-full"
-                      onClick={closeUserDetail}
-                    >
-                      <X className="w-4 h-4" />
-                    </Button>
-                  </div>
-
-                  {/* Address */}
-                  <div className="flex items-start gap-2 mt-2">
-                    <MapPin className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
-                    {isLoadingAddress || !selectedUser.address ? (
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Loader2 className="w-3 h-3 animate-spin" />
-                        <span>Mengambil alamat...</span>
-                      </div>
-                    ) : (
-                      <p className="text-sm text-muted-foreground leading-relaxed">
-                        {selectedUser.address}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Last updated */}
-                  {selectedUser.updatedAt && (
-                    <div className="flex items-center gap-2 mt-2">
-                      <Clock className="w-3 h-3 text-muted-foreground" />
-                      <p className="text-xs text-muted-foreground">
-                        Update {formatDistanceToNow(new Date(selectedUser.updatedAt), { addSuffix: true })}
-                      </p>
+          <>
+            {/* Backdrop to close on tap outside */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 z-35"
+              onClick={closeUserDetail}
+            />
+            <motion.div
+              initial={{ opacity: 0, y: 100 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 100 }}
+              className="absolute bottom-24 left-4 right-4 z-40"
+            >
+              <div className="bg-card/95 backdrop-blur-xl rounded-3xl p-5 shadow-card border border-border/50">
+                <div className="flex items-start gap-4">
+                  {/* Avatar */}
+                  <div className="relative flex-shrink-0">
+                    <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-accent flex items-center justify-center text-primary-foreground font-bold text-xl overflow-hidden">
+                      {selectedUser.avatarUrl ? (
+                        <img src={selectedUser.avatarUrl} className="w-full h-full object-cover" alt={selectedUser.name} />
+                      ) : (
+                        selectedUser.name.charAt(0).toUpperCase()
+                      )}
                     </div>
-                  )}
+                    <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-green-500 border-2 border-card" />
+                  </div>
 
-                  {/* Coordinates */}
-                  <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground/70 font-mono">
-                    <span>{selectedUser.lat.toFixed(6)}, {selectedUser.lng.toFixed(6)}</span>
+                  {/* Info */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-lg font-bold text-foreground truncate">
+                        {selectedUser.isCurrentUser ? "Lokasi Anda" : selectedUser.name}
+                      </h3>
+                      <button
+                        type="button"
+                        className="h-8 w-8 rounded-full flex items-center justify-center hover:bg-muted transition-colors"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          closeUserDetail();
+                        }}
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+
+                    {/* Address */}
+                    <div className="flex items-start gap-2 mt-2">
+                      <MapPin className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+                      {isLoadingAddress || !selectedUser.address ? (
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <Loader2 className="w-3 h-3 animate-spin" />
+                          <span>Mengambil alamat...</span>
+                        </div>
+                      ) : (
+                        <p className="text-sm text-muted-foreground leading-relaxed">
+                          {selectedUser.address}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Last updated */}
+                    {selectedUser.updatedAt && (
+                      <div className="flex items-center gap-2 mt-2">
+                        <Clock className="w-3 h-3 text-muted-foreground" />
+                        <p className="text-xs text-muted-foreground">
+                          Update {formatDistanceToNow(new Date(selectedUser.updatedAt), { addSuffix: true })}
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Coordinates */}
+                    <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground/70 font-mono">
+                      <span>{selectedUser.lat.toFixed(6)}, {selectedUser.lng.toFixed(6)}</span>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          </motion.div>
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
 
