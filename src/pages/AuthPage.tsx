@@ -79,19 +79,19 @@ const AuthPage = () => {
           initial={{ scale: 0, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ type: "spring", stiffness: 200 }}
-          className="mb-8"
+          className="mb-10"
         >
           <img 
             src={shareLogo} 
             alt="Share Logo" 
-            className="w-32 h-auto"
+            className="w-56 h-auto"
           />
         </motion.div>
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="w-full max-w-sm"
+          className="w-full max-w-sm backdrop-blur-xl bg-card/30 rounded-3xl p-8 border border-border/50 shadow-elevated"
         >
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-foreground">
