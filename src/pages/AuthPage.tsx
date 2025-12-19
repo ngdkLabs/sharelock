@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate, Navigate } from "react-router-dom";
-import { MapPin, Mail, Lock, User, Eye, EyeOff, Loader2 } from "lucide-react";
+import { Mail, Lock, User, Eye, EyeOff, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import logoImage from "@/assets/logo.png";
+import bgBlur from "@/assets/bg-blur.png";
 
 const AuthPage = () => {
   const navigate = useNavigate();
@@ -67,12 +69,12 @@ const AuthPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-hero overflow-hidden">
-      {/* Background orbs */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 left-10 w-72 h-72 bg-teal/20 rounded-full blur-3xl animate-float" />
-        <div className="absolute bottom-40 right-10 w-96 h-96 bg-coral/20 rounded-full blur-3xl animate-float-delayed" />
-      </div>
+    <div className="min-h-screen overflow-hidden relative">
+      {/* Background Image */}
+      <div 
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+        style={{ backgroundImage: `url(${bgBlur})` }}
+      />
 
       <div className="relative z-10 min-h-screen flex flex-col items-center justify-center px-6 py-12">
         {/* Logo */}
@@ -80,9 +82,9 @@ const AuthPage = () => {
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           transition={{ type: "spring", stiffness: 200 }}
-          className="w-28 h-28 mb-8 rounded-2xl bg-gradient-primary flex items-center justify-center shadow-glow-teal"
+          className="w-28 h-28 mb-8"
         >
-          <MapPin className="w-14 h-14 text-primary-foreground" />
+          <img src={logoImage} alt="LocateMe Logo" className="w-full h-full object-contain" />
         </motion.div>
 
         <motion.div

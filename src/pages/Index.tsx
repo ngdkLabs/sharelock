@@ -1,8 +1,10 @@
 import { motion } from "framer-motion";
-import { MapPin, Users, Shield, Zap, ArrowRight } from "lucide-react";
+import { Users, Shield, Zap, ArrowRight, MapPin } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
+import logoImage from "@/assets/logo.png";
+import bgBlur from "@/assets/bg-blur.png";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -17,15 +19,15 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-hero overflow-hidden">
+    <div className="min-h-screen overflow-hidden relative">
+      {/* Background Image */}
+      <div 
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+        style={{ backgroundImage: `url(${bgBlur})` }}
+      />
+      
       {/* Hero Section */}
       <div className="relative min-h-screen flex flex-col items-center justify-center px-6 py-12">
-        {/* Floating orbs */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-20 left-10 w-72 h-72 bg-teal/20 rounded-full blur-3xl animate-float" />
-          <div className="absolute bottom-40 right-10 w-96 h-96 bg-coral/20 rounded-full blur-3xl animate-float-delayed" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-purple/10 rounded-full blur-3xl" />
-        </div>
 
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -38,9 +40,9 @@ const Index = () => {
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ type: "spring", stiffness: 200, delay: 0.2 }}
-            className="w-32 h-32 mx-auto rounded-3xl bg-gradient-primary flex items-center justify-center shadow-glow-teal"
+            className="w-32 h-32 mx-auto"
           >
-            <MapPin className="w-16 h-16 text-primary-foreground" />
+            <img src={logoImage} alt="LocateMe Logo" className="w-full h-full object-contain" />
           </motion.div>
 
           <div className="space-y-4">
