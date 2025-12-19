@@ -80,9 +80,9 @@ const AuthPage = () => {
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           transition={{ type: "spring", stiffness: 200 }}
-          className="w-20 h-20 mb-8 rounded-2xl bg-gradient-primary flex items-center justify-center shadow-glow-teal"
+          className="w-28 h-28 mb-8 rounded-2xl bg-gradient-primary flex items-center justify-center shadow-glow-teal"
         >
-          <MapPin className="w-10 h-10 text-primary-foreground" />
+          <MapPin className="w-14 h-14 text-primary-foreground" />
         </motion.div>
 
         <motion.div
