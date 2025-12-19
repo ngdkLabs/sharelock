@@ -1,11 +1,12 @@
 import { motion } from "framer-motion";
-import { Map, Users, UserPlus, User } from "lucide-react";
+import { Map, Users, UserPlus, User, MessageCircle } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
 const navItems = [
   { icon: Map, label: "Map", path: "/map" },
   { icon: Users, label: "Friends", path: "/friends" },
+  { icon: MessageCircle, label: "Chat", path: "/chat" },
   { icon: UserPlus, label: "Add", path: "/invite" },
   { icon: User, label: "Profile", path: "/profile" },
 ];
