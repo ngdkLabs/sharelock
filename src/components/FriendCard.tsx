@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { MapPin, Navigation, MoreVertical, Trash2, MessageCircle } from "lucide-react";
+import { MapPin, Navigation, MoreVertical, Trash2 } from "lucide-react";
 import { UserAvatar } from "./UserAvatar";
 import { Button } from "./ui/button";
 import { cn } from "@/lib/utils";
@@ -19,7 +19,6 @@ interface FriendCardProps {
   isOnline?: boolean;
   onLocate?: () => void;
   onRemove?: () => void;
-  onMessage?: () => void;
   className?: string;
 }
 
@@ -32,7 +31,6 @@ export const FriendCard = ({
   isOnline = false,
   onLocate,
   onRemove,
-  onMessage,
   className,
 }: FriendCardProps) => {
   return (
@@ -81,17 +79,6 @@ export const FriendCard = ({
       </div>
 
       <div className="flex items-center gap-2">
-        <Button
-          size="icon"
-          variant="outline"
-          className="rounded-xl h-10 w-10"
-          onClick={(e) => {
-            e.stopPropagation();
-            onMessage?.();
-          }}
-        >
-          <MessageCircle className="w-4 h-4" />
-        </Button>
         <Button
           size="icon"
           className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl h-10 w-10 shadow-glow-green"

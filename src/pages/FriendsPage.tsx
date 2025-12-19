@@ -20,7 +20,6 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import ChatWindow from "@/components/ChatWindow";
 
 const FriendsPage = () => {
   const navigate = useNavigate();
@@ -28,7 +27,6 @@ const FriendsPage = () => {
   const { friendsLocations } = useLocationTracking();
   const [search, setSearch] = useState("");
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
-  const [chatFriend, setChatFriend] = useState<{ id: string; name: string; avatar?: string } | null>(null);
 
   const filteredFriends = friends.filter((f) =>
     f.profile.username.toLowerCase().includes(search.toLowerCase()) ||
@@ -128,11 +126,6 @@ const FriendsPage = () => {
                   isOnline={friend.isOnline}
                   onLocate={() => handleLocate(friend.profile.user_id)}
                   onRemove={() => setDeleteConfirm(friend.profile.user_id)}
-                  onMessage={() => setChatFriend({
-                    id: friend.profile.user_id,
-                    name: friend.profile.full_name || friend.profile.username,
-                    avatar: friend.profile.avatar_url || undefined
-                  })}
                 />
               </motion.div>
             ))}
@@ -161,16 +154,6 @@ const FriendsPage = () => {
       </AlertDialog>
 
       <BottomNavigation />
-
-      {/* Chat Window */}
-      {chatFriend && (
-        <ChatWindow
-          friendId={chatFriend.id}
-          friendName={chatFriend.name}
-          friendAvatar={chatFriend.avatar}
-          onClose={() => setChatFriend(null)}
-        />
-      )}
     </div>
   );
 };

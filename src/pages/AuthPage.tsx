@@ -1,13 +1,11 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate, Navigate } from "react-router-dom";
-import { Mail, Lock, User, Eye, EyeOff, Loader2 } from "lucide-react";
+import { MapPin, Mail, Lock, User, Eye, EyeOff, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import bgBlur from "@/assets/bgblur.png";
-import shareLogo from "@/assets/share-logo.png";
 
 const AuthPage = () => {
   const navigate = useNavigate();
@@ -69,23 +67,22 @@ const AuthPage = () => {
   };
 
   return (
-    <div 
-      className="min-h-screen overflow-hidden bg-cover bg-center bg-no-repeat"
-      style={{ backgroundImage: `url(${bgBlur})` }}
-    >
+    <div className="min-h-screen bg-gradient-hero overflow-hidden">
+      {/* Background orbs */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-20 left-10 w-72 h-72 bg-teal/20 rounded-full blur-3xl animate-float" />
+        <div className="absolute bottom-40 right-10 w-96 h-96 bg-coral/20 rounded-full blur-3xl animate-float-delayed" />
+      </div>
+
       <div className="relative z-10 min-h-screen flex flex-col items-center justify-center px-6 py-12">
         {/* Logo */}
         <motion.div
-          initial={{ scale: 0, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
           transition={{ type: "spring", stiffness: 200 }}
-          className="mb-10"
+          className="w-20 h-20 mb-8 rounded-2xl bg-gradient-primary flex items-center justify-center shadow-glow-teal"
         >
-          <img 
-            src={shareLogo} 
-            alt="Share Logo" 
-            className="w-56 h-auto drop-shadow-2xl"
-          />
+          <MapPin className="w-10 h-10 text-primary-foreground" />
         </motion.div>
 
         <motion.div
@@ -93,18 +90,16 @@ const AuthPage = () => {
           animate={{ opacity: 1, y: 0 }}
           className="w-full max-w-sm"
         >
-          {/* Glassmorphism Card */}
-          <div className="bg-background/20 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl">
-            <div className="text-center mb-8">
-              <h1 className="text-3xl font-bold text-foreground">
-                {isLogin ? "Welcome back" : "Create account"}
-              </h1>
-              <p className="text-muted-foreground mt-2">
-                {isLogin ? "Sign in to continue" : "Start sharing your location"}
-              </p>
-            </div>
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold text-foreground">
+              {isLogin ? "Welcome back" : "Create account"}
+            </h1>
+            <p className="text-muted-foreground mt-2">
+              {isLogin ? "Sign in to continue" : "Start sharing your location"}
+            </p>
+          </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4">
             {!isLogin && (
               <>
                 <div className="relative">
@@ -179,20 +174,19 @@ const AuthPage = () => {
                 isLogin ? "Sign In" : "Create Account"
               )}
             </Button>
-            </form>
+          </form>
 
-            <div className="mt-6 text-center">
-              <button
-                onClick={() => setIsLogin(!isLogin)}
-                className="text-muted-foreground hover:text-foreground transition-colors"
-              >
-                {isLogin ? (
-                  <>Don't have an account? <span className="text-primary font-semibold">Sign up</span></>
-                ) : (
-                  <>Already have an account? <span className="text-primary font-semibold">Sign in</span></>
-                )}
-              </button>
-            </div>
+          <div className="mt-6 text-center">
+            <button
+              onClick={() => setIsLogin(!isLogin)}
+              className="text-muted-foreground hover:text-foreground transition-colors"
+            >
+              {isLogin ? (
+                <>Don't have an account? <span className="text-primary font-semibold">Sign up</span></>
+              ) : (
+                <>Already have an account? <span className="text-primary font-semibold">Sign in</span></>
+              )}
+            </button>
           </div>
         </motion.div>
       </div>

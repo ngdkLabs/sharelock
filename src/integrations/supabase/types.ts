@@ -137,68 +137,6 @@ export type Database = {
         }
         Relationships: []
       }
-      messages: {
-        Row: {
-          audio_duration: number | null
-          audio_url: string | null
-          content: string
-          created_at: string
-          id: string
-          image_url: string | null
-          is_read: boolean
-          location_address: string | null
-          location_lat: number | null
-          location_lng: number | null
-          receiver_id: string
-          reply_to_content: string | null
-          reply_to_id: string | null
-          reply_to_sender_name: string | null
-          sender_id: string
-        }
-        Insert: {
-          audio_duration?: number | null
-          audio_url?: string | null
-          content: string
-          created_at?: string
-          id?: string
-          image_url?: string | null
-          is_read?: boolean
-          location_address?: string | null
-          location_lat?: number | null
-          location_lng?: number | null
-          receiver_id: string
-          reply_to_content?: string | null
-          reply_to_id?: string | null
-          reply_to_sender_name?: string | null
-          sender_id: string
-        }
-        Update: {
-          audio_duration?: number | null
-          audio_url?: string | null
-          content?: string
-          created_at?: string
-          id?: string
-          image_url?: string | null
-          is_read?: boolean
-          location_address?: string | null
-          location_lat?: number | null
-          location_lng?: number | null
-          receiver_id?: string
-          reply_to_content?: string | null
-          reply_to_id?: string | null
-          reply_to_sender_name?: string | null
-          sender_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "messages_reply_to_id_fkey"
-            columns: ["reply_to_id"]
-            isOneToOne: false
-            referencedRelation: "messages"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -229,30 +167,6 @@ export type Database = {
           updated_at?: string
           user_id?: string
           username?: string
-        }
-        Relationships: []
-      }
-      typing_status: {
-        Row: {
-          friend_id: string
-          id: string
-          is_typing: boolean
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          friend_id: string
-          id?: string
-          is_typing?: boolean
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          friend_id?: string
-          id?: string
-          is_typing?: boolean
-          updated_at?: string
-          user_id?: string
         }
         Relationships: []
       }
