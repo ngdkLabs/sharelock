@@ -233,6 +233,38 @@ export const useMessages = (friendId: string | null) => {
     }
   };
 
+  // Delete message
+  const deleteMessage = async (messageId: string) => {
+    if (!user) return false;
+
+    try {
+      const { error } = await supabase
+        .from('messages')
+        .delete()
+        .eq('id', messageId)
+        .eq('sender_id', user.id);
+
+      if (error) throw error;
+
+      // Remove from local state
+      setMessages(prev => prev.filter(m => m.id !== messageId));
+      
+      toast({
+        title: 'Pesan dihapus',
+        description: 'Pesan telah dihapus untuk semua orang'
+      });
+      
+      return true;
+    } catch (error: any) {
+      toast({
+        title: 'Gagal menghapus pesan',
+        description: error.message,
+        variant: 'destructive'
+      });
+      return false;
+    }
+  };
+
   // Add reaction to message
   const addReaction = async (messageId: string, emoji: string) => {
     if (!user) return;
@@ -376,6 +408,7 @@ export const useMessages = (friendId: string | null) => {
     sendImageMessage,
     sendLocationMessage,
     addReaction,
+    deleteMessage,
     handleTyping,
     getUnreadCount,
     refetch: fetchMessages
