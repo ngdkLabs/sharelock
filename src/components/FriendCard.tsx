@@ -1,8 +1,14 @@
 import { motion } from "framer-motion";
-import { MapPin, Navigation, MoreVertical } from "lucide-react";
+import { MapPin, Navigation, MoreVertical, Trash2 } from "lucide-react";
 import { UserAvatar } from "./UserAvatar";
 import { Button } from "./ui/button";
 import { cn } from "@/lib/utils";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "./ui/dropdown-menu";
 
 interface FriendCardProps {
   name: string;
@@ -12,6 +18,7 @@ interface FriendCardProps {
   lastSeen?: string;
   isOnline?: boolean;
   onLocate?: () => void;
+  onRemove?: () => void;
   className?: string;
 }
 
@@ -23,14 +30,15 @@ export const FriendCard = ({
   lastSeen,
   isOnline = false,
   onLocate,
+  onRemove,
   className,
 }: FriendCardProps) => {
   return (
     <motion.div
       initial={{ opacity: 0, x: -20 }}
       animate={{ opacity: 1, x: 0 }}
-      whileHover={{ scale: 1.02 }}
-      whileTap={{ scale: 0.98 }}
+      whileHover={{ scale: 1.01 }}
+      whileTap={{ scale: 0.99 }}
       className={cn(
         "glass rounded-2xl p-4 flex items-center gap-4 cursor-pointer transition-shadow hover:shadow-card",
         className
@@ -48,7 +56,7 @@ export const FriendCard = ({
         <div className="flex items-center gap-2">
           <h3 className="font-semibold text-foreground truncate">{name}</h3>
           {isOnline && (
-            <span className="text-xs text-teal font-medium">Online</span>
+            <span className="text-xs text-teal font-medium px-2 py-0.5 bg-teal/10 rounded-full">Live</span>
           )}
         </div>
         
@@ -80,13 +88,29 @@ export const FriendCard = ({
         >
           <Navigation className="w-4 h-4" />
         </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <MoreVertical className="w-4 h-4" />
-        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <MoreVertical className="w-4 h-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="glass">
+            <DropdownMenuItem 
+              onClick={(e) => {
+                e.stopPropagation();
+                onRemove?.();
+              }}
+              className="text-destructive focus:text-destructive"
+            >
+              <Trash2 className="w-4 h-4 mr-2" />
+              Remove Friend
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </motion.div>
   );

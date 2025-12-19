@@ -1,10 +1,20 @@
 import { motion } from "framer-motion";
-import { MapPin, Users, Shield, Zap } from "lucide-react";
+import { MapPin, Users, Shield, Zap, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Index = () => {
   const navigate = useNavigate();
+  const { user, loading } = useAuth();
+
+  const handleGetStarted = () => {
+    if (user) {
+      navigate("/map");
+    } else {
+      navigate("/auth");
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-hero overflow-hidden">
@@ -45,9 +55,9 @@ const Index = () => {
           {/* Features */}
           <div className="grid grid-cols-3 gap-4 py-6">
             {[
-              { icon: MapPin, label: "Live Location" },
-              { icon: Users, label: "Friends" },
-              { icon: Shield, label: "Private" },
+              { icon: MapPin, label: "Live Location", desc: "Real-time GPS" },
+              { icon: Users, label: "Connect", desc: "With invite codes" },
+              { icon: Shield, label: "Private", desc: "Your data is safe" },
             ].map((feature, i) => (
               <motion.div
                 key={feature.label}
@@ -56,10 +66,11 @@ const Index = () => {
                 transition={{ delay: 0.4 + i * 0.1 }}
                 className="flex flex-col items-center gap-2"
               >
-                <div className="w-12 h-12 rounded-2xl bg-muted flex items-center justify-center">
-                  <feature.icon className="w-5 h-5 text-primary" />
+                <div className="w-14 h-14 rounded-2xl bg-muted flex items-center justify-center">
+                  <feature.icon className="w-6 h-6 text-primary" />
                 </div>
-                <span className="text-xs text-muted-foreground">{feature.label}</span>
+                <span className="text-xs font-medium text-foreground">{feature.label}</span>
+                <span className="text-[10px] text-muted-foreground">{feature.desc}</span>
               </motion.div>
             ))}
           </div>
@@ -74,15 +85,24 @@ const Index = () => {
             <Button
               variant="gradient"
               size="xl"
-              className="w-full"
-              onClick={() => navigate("/map")}
+              className="w-full group"
+              onClick={handleGetStarted}
+              disabled={loading}
             >
               <Zap className="w-5 h-5" />
-              Get Started
+              {user ? "Open Map" : "Get Started"}
+              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </Button>
-            <p className="text-xs text-muted-foreground">
-              No account required to explore
-            </p>
+            {user && (
+              <p className="text-sm text-muted-foreground">
+                Welcome back! You're signed in.
+              </p>
+            )}
+            {!user && (
+              <p className="text-xs text-muted-foreground">
+                Create a free account to start sharing
+              </p>
+            )}
           </motion.div>
         </motion.div>
       </div>
