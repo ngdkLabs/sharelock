@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Users, Shield, Zap, ArrowRight, MapPin } from "lucide-react";
+import { Users, Shield, Zap, ArrowRight, MapPin, Download } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
@@ -25,6 +25,18 @@ const Index = () => {
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
         style={{ backgroundImage: `url(${bgBlur})` }}
       />
+      
+      {/* Install Button - Top Right */}
+      <motion.button
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.5 }}
+        onClick={() => navigate("/install")}
+        className="absolute top-4 right-4 z-20 flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-white text-sm hover:bg-white/20 transition-colors"
+      >
+        <Download className="w-4 h-4" />
+        Install App
+      </motion.button>
       
       {/* Hero Section */}
       <div className="relative min-h-screen flex flex-col items-center justify-center px-6 py-12">

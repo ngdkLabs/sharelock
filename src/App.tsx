@@ -13,6 +13,7 @@ import FriendsPage from "./pages/FriendsPage";
 import InvitePage from "./pages/InvitePage";
 import ProfilePage from "./pages/ProfilePage";
 import ChatPage from "./pages/ChatPage";
+import InstallPage from "./pages/InstallPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -35,6 +36,7 @@ const App = () => (
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/auth" element={<AuthPage />} />
+                <Route path="/install" element={<InstallPage />} />
                 <Route path="/map" element={
                   <ProtectedRoute>
                     <MapPage />
