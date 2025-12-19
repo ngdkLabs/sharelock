@@ -3,6 +3,7 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { formatDistanceToNow } from "date-fns";
 
 interface MapUser {
   id: string;
@@ -28,35 +29,92 @@ interface MapViewProps {
   onUserClick?: (userId: string) => void;
   trail?: TrailPoint[];
   trailColor?: string;
+  selectedUserId?: string;
 }
 
-const createCustomIcon = (user: MapUser) => {
+const createCustomIcon = (user: MapUser, isSelected: boolean = false) => {
   const isCurrentUser = user.isCurrentUser;
-  const color = isCurrentUser ? "#14b8a6" : "#f87171";
-  const initial = user.name.charAt(0).toUpperCase();
+  
+  // Calculate time ago for badge
+  let timeAgo = "";
+  if (user.updatedAt && !isCurrentUser) {
+    const date = new Date(user.updatedAt);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffMins = Math.floor(diffMs / (1000 * 60));
+    
+    if (diffHours > 0) {
+      timeAgo = `${diffHours} hour${diffHours > 1 ? 's' : ''}`;
+    } else if (diffMins > 0) {
+      timeAgo = `${diffMins}m`;
+    } else {
+      timeAgo = "now";
+    }
+  }
+  
   const avatarContent = user.avatarUrl 
     ? `<img src="${user.avatarUrl}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;" />`
-    : initial;
+    : `<span style="color: white; font-weight: 700; font-size: 20px;">${user.name.charAt(0).toUpperCase()}</span>`;
+  
+  const size = isSelected ? 56 : 48;
+  const borderWidth = isSelected ? 4 : 3;
   
   return L.divIcon({
     className: "custom-marker",
     html: `
-      <div style="display: flex; flex-direction: column; align-items: center; filter: drop-shadow(0 4px 12px ${color}80);">
-        <div style="position: relative;">
-          <div style="position: absolute; inset: -6px; border-radius: 50%; animation: pulse 2s ease-in-out infinite; background: ${color}40;"></div>
-          <div style="position: relative; width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 18px; border: 3px solid white; overflow: hidden; background: linear-gradient(135deg, ${isCurrentUser ? '#14b8a6, #0ea5e9' : '#f87171, #a855f7'});">
-            ${user.avatarUrl ? avatarContent : initial}
+      <div style="display: flex; flex-direction: column; align-items: center; position: relative;">
+        ${timeAgo && !isCurrentUser ? `
+          <div style="
+            position: absolute;
+            top: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            border-radius: 12px;
+            padding: 2px 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            z-index: 10;
+          ">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <polyline points="12,6 12,12 16,14"/>
+            </svg>
+            <span style="font-size: 11px; font-weight: 600; color: #333; white-space: nowrap;">${timeAgo}</span>
           </div>
-          <div style="position: absolute; bottom: 0; right: 0; width: 14px; height: 14px; border-radius: 50%; background: #22c55e; border: 2px solid white;"></div>
+        ` : ''}
+        <div style="
+          position: relative;
+          width: ${size}px;
+          height: ${size}px;
+          border-radius: 50%;
+          overflow: hidden;
+          border: ${borderWidth}px solid white;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+          background: linear-gradient(135deg, ${isCurrentUser ? '#22c55e, #16a34a' : '#3b82f6, #2563eb'});
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          ${isSelected ? 'transform: scale(1.1);' : ''}
+        ">
+          ${avatarContent}
         </div>
-        <div style="margin-top: 4px; padding: 4px 10px; background: rgba(0,0,0,0.8); border-radius: 12px; backdrop-filter: blur(8px);">
-          <span style="color: white; font-size: 11px; font-weight: 600; white-space: nowrap;">${isCurrentUser ? 'You' : user.name}</span>
-        </div>
+        <div style="
+          width: 0;
+          height: 0;
+          border-left: 8px solid transparent;
+          border-right: 8px solid transparent;
+          border-top: 12px solid white;
+          margin-top: -2px;
+        "></div>
       </div>
     `,
-    iconSize: [48, 80],
-    iconAnchor: [24, 80],
-    popupAnchor: [0, -80],
+    iconSize: [size, size + 40],
+    iconAnchor: [size / 2, size + 10],
+    popupAnchor: [0, -(size + 10)],
   });
 };
 
@@ -67,12 +125,14 @@ export const MapView = ({
   className,
   onUserClick,
   trail,
-  trailColor = "#14b8a6",
+  trailColor = "#22c55e",
+  selectedUserId,
 }: MapViewProps) => {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
   const markersRef = useRef<L.Marker[]>([]);
   const polylineRef = useRef<L.Polyline | null>(null);
+  const trailMarkersRef = useRef<L.CircleMarker[]>([]);
   const [isMapReady, setIsMapReady] = useState(false);
 
   // Initialize map
@@ -86,16 +146,16 @@ export const MapView = ({
       attributionControl: false,
     });
 
-    // Use CartoDB Positron for cleaner look (similar to iSharing)
+    // Use Google-like map style
     L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
       maxZoom: 19,
     }).addTo(map);
 
-    // Add attribution in a subtle way
+    // Subtle attribution
     L.control.attribution({
       position: "bottomleft",
       prefix: false,
-    }).addAttribution('© <a href="https://carto.com/">CARTO</a> © <a href="https://www.openstreetmap.org/copyright">OSM</a>').addTo(map);
+    }).addAttribution('© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>').addTo(map);
 
     mapInstanceRef.current = map;
     setIsMapReady(true);
@@ -110,7 +170,7 @@ export const MapView = ({
   useEffect(() => {
     if (mapInstanceRef.current && center) {
       mapInstanceRef.current.flyTo(center, mapInstanceRef.current.getZoom(), {
-        duration: 1,
+        duration: 0.8,
       });
     }
   }, [center]);
@@ -125,8 +185,10 @@ export const MapView = ({
 
     // Add new markers
     users.forEach((user) => {
+      const isSelected = selectedUserId === user.id;
       const marker = L.marker([user.lat, user.lng], {
-        icon: createCustomIcon(user),
+        icon: createCustomIcon(user, isSelected),
+        zIndexOffset: isSelected ? 1000 : user.isCurrentUser ? 500 : 0,
       }).addTo(mapInstanceRef.current!);
 
       marker.on("click", () => {
@@ -137,23 +199,19 @@ export const MapView = ({
 
       markersRef.current.push(marker);
     });
-
-    // Fit bounds if multiple users
-    if (users.length > 1) {
-      const bounds = L.latLngBounds(users.map((u) => [u.lat, u.lng]));
-      mapInstanceRef.current.fitBounds(bounds, { padding: [50, 50] });
-    }
-  }, [users, isMapReady, onUserClick]);
+  }, [users, isMapReady, onUserClick, selectedUserId]);
 
   // Update trail/polyline
   useEffect(() => {
     if (!mapInstanceRef.current || !isMapReady) return;
 
-    // Clear existing polyline
+    // Clear existing polyline and markers
     if (polylineRef.current) {
       polylineRef.current.remove();
       polylineRef.current = null;
     }
+    trailMarkersRef.current.forEach(m => m.remove());
+    trailMarkersRef.current = [];
 
     // Add new polyline if trail exists
     if (trail && trail.length > 1) {
@@ -168,20 +226,21 @@ export const MapView = ({
         lineJoin: "round",
       }).addTo(mapInstanceRef.current);
 
-      // Add circle markers for each point
+      // Add circle markers for key points
       trail.forEach((point, index) => {
         const isFirst = index === 0;
         const isLast = index === trail.length - 1;
         
-        if (isFirst || isLast || index % 5 === 0) {
-          L.circleMarker([point.lat, point.lng], {
-            radius: isFirst || isLast ? 8 : 4,
-            fillColor: isFirst ? "#22c55e" : isLast ? "#ef4444" : trailColor,
+        if (isFirst || isLast) {
+          const marker = L.circleMarker([point.lat, point.lng], {
+            radius: 8,
+            fillColor: isFirst ? "#22c55e" : "#ef4444",
             color: "white",
-            weight: 2,
+            weight: 3,
             opacity: 1,
             fillOpacity: 1,
           }).addTo(mapInstanceRef.current!);
+          trailMarkersRef.current.push(marker);
         }
       });
     }
@@ -194,15 +253,16 @@ export const MapView = ({
       className={cn("w-full h-full overflow-hidden", className)}
     >
       <style>{`
-        @keyframes pulse {
-          0%, 100% { transform: scale(1); opacity: 0.6; }
-          50% { transform: scale(1.3); opacity: 0; }
-        }
         .leaflet-control-attribution {
-          background: rgba(255,255,255,0.7) !important;
-          padding: 2px 6px !important;
+          background: rgba(255,255,255,0.8) !important;
+          padding: 2px 8px !important;
           font-size: 10px !important;
           border-radius: 4px !important;
+          margin: 8px !important;
+        }
+        .custom-marker {
+          background: transparent !important;
+          border: none !important;
         }
       `}</style>
       <div ref={mapRef} className="w-full h-full" />
