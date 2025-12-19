@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import { motion } from "framer-motion";
-import { Settings, Bell, Shield, LogOut, ChevronRight, MapPin, Camera, Loader2, Edit2 } from "lucide-react";
+import { Settings, Bell, Shield, LogOut, ChevronRight, MapPin, Camera, Loader2, Edit2, AlertTriangle } from "lucide-react";
 import { UserAvatar } from "@/components/UserAvatar";
 import { BottomNavigation } from "@/components/BottomNavigation";
 import { Button } from "@/components/ui/button";
@@ -94,6 +94,11 @@ const ProfilePage = () => {
   const handleToggleSharing = async (checked: boolean) => {
     await updateProfile({ is_sharing_location: checked });
     toast.success(checked ? "Location sharing enabled" : "Location sharing disabled");
+  };
+
+  const handleToggleSOSAlarm = async (checked: boolean) => {
+    await updateProfile({ sos_alarm_enabled: checked });
+    toast.success(checked ? "SOS alarm enabled" : "SOS alarm disabled");
   };
 
   if (loading) {
@@ -190,6 +195,19 @@ const ProfilePage = () => {
               <Switch 
                 checked={profile?.is_sharing_location ?? true} 
                 onCheckedChange={handleToggleSharing}
+              />
+            </div>
+            <div className="flex items-center justify-between p-4">
+              <div className="flex items-center gap-3">
+                <AlertTriangle className="w-5 h-5 text-destructive" />
+                <div>
+                  <span className="font-medium text-foreground">SOS Alarm</span>
+                  <p className="text-xs text-muted-foreground">Sound & vibration for SOS</p>
+                </div>
+              </div>
+              <Switch 
+                checked={profile?.sos_alarm_enabled ?? true} 
+                onCheckedChange={handleToggleSOSAlarm}
               />
             </div>
             <div className="flex items-center justify-between p-4">

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useProfile } from '@/hooks/useProfile';
 import { toast } from 'sonner';
 
 // Alarm sound using Web Audio API
@@ -58,14 +59,15 @@ const vibrateDevice = () => {
 
 export const useSOSAlert = () => {
   const { user } = useAuth();
+  const { profile } = useProfile();
   const processedMessages = useRef<Set<string>>(new Set());
 
-  const triggerSOSAlert = useCallback((senderName: string) => {
-    // Play alarm sound
-    playAlarmSound();
-    
-    // Vibrate device
-    vibrateDevice();
+  const triggerSOSAlert = useCallback((senderName: string, withAlarm: boolean = true) => {
+    // Play alarm sound and vibrate only if enabled
+    if (withAlarm) {
+      playAlarmSound();
+      vibrateDevice();
+    }
     
     // Show persistent toast
     toast.error(`🚨 SOS DARURAT dari ${senderName}!`, {
@@ -105,14 +107,23 @@ export const useSOSAlert = () => {
             processedMessages.current.add(message.id);
             
             // Get sender's profile
-            const { data: profile } = await supabase
+            const { data: senderProfile } = await supabase
               .from('profiles')
               .select('full_name, username')
               .eq('user_id', message.sender_id)
               .single();
             
-            const senderName = profile?.full_name || profile?.username || 'Teman';
-            triggerSOSAlert(senderName);
+            // Get current user's profile to check alarm setting
+            const { data: myProfile } = await supabase
+              .from('profiles')
+              .select('sos_alarm_enabled')
+              .eq('user_id', user.id)
+              .single();
+            
+            const senderName = senderProfile?.full_name || senderProfile?.username || 'Teman';
+            const alarmEnabled = myProfile?.sos_alarm_enabled ?? true;
+            
+            triggerSOSAlert(senderName, alarmEnabled);
           }
         }
       )

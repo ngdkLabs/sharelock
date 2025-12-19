@@ -206,6 +206,7 @@ export type Database = {
           full_name: string | null
           id: string
           is_sharing_location: boolean | null
+          sos_alarm_enabled: boolean
           updated_at: string
           user_id: string
           username: string
@@ -216,6 +217,7 @@ export type Database = {
           full_name?: string | null
           id?: string
           is_sharing_location?: boolean | null
+          sos_alarm_enabled?: boolean
           updated_at?: string
           user_id: string
           username: string
@@ -226,6 +228,7 @@ export type Database = {
           full_name?: string | null
           id?: string
           is_sharing_location?: boolean | null
+          sos_alarm_enabled?: boolean
           updated_at?: string
           user_id?: string
           username?: string
