@@ -1,10 +1,8 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
-  ArrowLeft, 
   MapPin, 
   Clock, 
-  Navigation, 
   History, 
   Eye, 
   Car, 
@@ -13,12 +11,13 @@ import {
   Route,
   Building,
   ChevronRight,
-  ExternalLink
+  ExternalLink,
+  Image as ImageIcon
 } from "lucide-react";
 import { formatDistanceToNow, format, isToday, isYesterday } from "date-fns";
 import { id as localeId } from "date-fns/locale";
 import { useLocationHistory, LocationHistoryPoint } from "@/hooks/useLocationHistory";
-import { useReverseGeocode } from "@/hooks/useReverseGeocode";
+import { usePlaceInfo } from "@/hooks/usePlaceInfo";
 
 interface FriendLocationDetailProps {
   friend: {
@@ -58,8 +57,29 @@ export const FriendLocationDetail = ({
   const [historyData, setHistoryData] = useState<LocationHistoryPoint[]>([]);
   const [placesVisited, setPlacesVisited] = useState<PlaceVisit[]>([]);
   const [isLoadingPlaces, setIsLoadingPlaces] = useState(false);
+  const [streetViewImage, setStreetViewImage] = useState<string | null>(null);
+  const [placeInfo, setPlaceInfo] = useState<{ name: string | null } | null>(null);
+  const [imageError, setImageError] = useState(false);
   const { getLocationHistory } = useLocationHistory();
-  const { getAddress } = useReverseGeocode();
+  const { getPlaceInfo, getStreetViewUrl, isLoading: isLoadingPlace } = usePlaceInfo();
+
+  // Load place info and street view image
+  useEffect(() => {
+    const loadPlaceInfo = async () => {
+      setImageError(false);
+      // Generate static map URL
+      const mapUrl = getStreetViewUrl(friend.lat, friend.lng);
+      setStreetViewImage(mapUrl);
+      
+      // Fetch place info from API
+      const info = await getPlaceInfo(friend.lat, friend.lng);
+      if (info?.place) {
+        setPlaceInfo({ name: info.place.name });
+      }
+    };
+    
+    loadPlaceInfo();
+  }, [friend.lat, friend.lng]);
 
   // Load full history when history tab is selected
   useEffect(() => {
@@ -346,8 +366,48 @@ export const FriendLocationDetail = ({
                   </button>
                 </div>
 
-                {/* Location Details */}
+                {/* Street View Preview */}
                 <div className="mt-5 space-y-4">
+                  <div className="rounded-xl overflow-hidden border border-border">
+                    <div className="relative aspect-video bg-muted">
+                      {isLoadingPlace ? (
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                        </div>
+                      ) : streetViewImage && !imageError ? (
+                        <img 
+                          src={streetViewImage} 
+                          alt="Street view"
+                          className="w-full h-full object-cover"
+                          onError={() => setImageError(true)}
+                        />
+                      ) : (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-muted-foreground">
+                          <ImageIcon className="w-12 h-12" />
+                          <p className="text-sm">Preview tidak tersedia</p>
+                        </div>
+                      )}
+                      
+                      {/* Overlay button */}
+                      <button
+                        onClick={openStreetView}
+                        className="absolute bottom-3 right-3 bg-card/90 backdrop-blur-sm px-3 py-2 rounded-lg flex items-center gap-2 shadow-card hover:bg-card transition-colors"
+                      >
+                        <Eye className="w-4 h-4 text-primary" />
+                        <span className="text-xs font-medium text-foreground">Street View</span>
+                        <ExternalLink className="w-3 h-3 text-muted-foreground" />
+                      </button>
+                    </div>
+                    
+                    {/* Place name if available */}
+                    {placeInfo?.name && (
+                      <div className="p-3 bg-muted/30">
+                        <p className="text-sm font-medium text-foreground">{placeInfo.name}</p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Location Details */}
                   <div className="bg-muted/50 rounded-xl p-4">
                     <h4 className="text-sm font-medium text-foreground mb-2">Detail Lokasi</h4>
                     <div className="space-y-2 text-sm">
@@ -367,23 +427,6 @@ export const FriendLocationDetail = ({
                       )}
                     </div>
                   </div>
-
-                  {/* Quick Street View Preview */}
-                  <button
-                    onClick={openStreetView}
-                    className="w-full bg-muted/50 rounded-xl p-4 flex items-center justify-between hover:bg-muted transition-colors"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                        <Eye className="w-5 h-5 text-primary" />
-                      </div>
-                      <div className="text-left">
-                        <p className="text-sm font-medium text-foreground">Lihat Street View</p>
-                        <p className="text-xs text-muted-foreground">Buka di Google Maps</p>
-                      </div>
-                    </div>
-                    <ExternalLink className="w-4 h-4 text-muted-foreground" />
-                  </button>
                 </div>
               </motion.div>
             )}
