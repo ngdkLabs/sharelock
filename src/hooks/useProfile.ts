@@ -29,7 +29,7 @@ export const useProfile = () => {
       .eq("user_id", user.id)
       .maybeSingle();
 
-    if (error) {
+    if (error && import.meta.env.DEV) {
       console.error("Error fetching profile:", error);
     }
     

@@ -49,7 +49,7 @@ export const useLocationTracking = () => {
       .from("user_locations")
       .upsert(locationData, { onConflict: "user_id" });
 
-    if (error) {
+    if (error && import.meta.env.DEV) {
       console.error("Error updating location:", error);
     }
   }, [user]);
@@ -70,7 +70,9 @@ export const useLocationTracking = () => {
         updateLocationInDb(position);
       },
       (err) => {
-        console.error("Geolocation error:", err);
+        if (import.meta.env.DEV) {
+          console.error("Geolocation error:", err);
+        }
         setError(err.message);
       },
       {
@@ -102,7 +104,9 @@ export const useLocationTracking = () => {
       .or(`user_id.eq.${user.id},friend_id.eq.${user.id}`);
 
     if (friendsError) {
-      console.error("Error fetching friends:", friendsError);
+      if (import.meta.env.DEV) {
+        console.error("Error fetching friends:", friendsError);
+      }
       return;
     }
 
@@ -122,7 +126,9 @@ export const useLocationTracking = () => {
       .in("user_id", friendIds);
 
     if (locError) {
-      console.error("Error fetching locations:", locError);
+      if (import.meta.env.DEV) {
+        console.error("Error fetching locations:", locError);
+      }
       return;
     }
 
