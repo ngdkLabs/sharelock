@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, MessageCircle, MapPin, Clock, Navigation, History, Eye, Car, Loader2, Route } from "lucide-react";
+import { ArrowLeft, MessageCircle, Navigation } from "lucide-react";
 import { MapView } from "@/components/MapView";
 import { BottomNavigation } from "@/components/BottomNavigation";
+import { FriendLocationDetail } from "@/components/FriendLocationDetail";
 import { useLocationTracking } from "@/hooks/useLocationTracking";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/hooks/useProfile";
@@ -31,7 +32,7 @@ interface TrailPoint {
 const MapPage = () => {
   const { user } = useAuth();
   const { profile } = useProfile();
-  const { currentLocation, friendsLocations, isTracking, error } = useLocationTracking();
+  const { currentLocation, friendsLocations, isTracking } = useLocationTracking();
   const { getAddress, isLoading: isLoadingAddress } = useReverseGeocode();
   const { getLocationHistory, isLoading: isLoadingHistory } = useLocationHistory();
   const [mapCenter, setMapCenter] = useState<[number, number]>([-6.2088, 106.8456]);
@@ -45,9 +46,8 @@ const MapPage = () => {
     }
   }, [currentLocation]);
 
-  // Calculate distance between two points
   const calculateDistance = (lat1: number, lng1: number, lat2: number, lng2: number) => {
-    const R = 6371; // Earth's radius in km
+    const R = 6371;
     const dLat = (lat2 - lat1) * Math.PI / 180;
     const dLng = (lng2 - lng1) * Math.PI / 180;
     const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
@@ -57,9 +57,7 @@ const MapPage = () => {
     return R * c;
   };
 
-  // Build map users array
   const mapUsers = [
-    // Current user
     ...(currentLocation && user ? [{
       id: user.id,
       name: profile?.full_name || profile?.username || "You",
@@ -68,7 +66,6 @@ const MapPage = () => {
       isCurrentUser: true,
       avatarUrl: profile?.avatar_url,
     }] : []),
-    // Friends
     ...friendsLocations.map((loc) => ({
       id: loc.user_id,
       name: loc.profile?.full_name || loc.profile?.username || "Friend",
@@ -80,18 +77,11 @@ const MapPage = () => {
     })),
   ];
 
-  const handleCenterOnMe = () => {
-    if (currentLocation) {
-      setMapCenter([currentLocation.coords.latitude, currentLocation.coords.longitude]);
-    }
-  };
-
   const handleUserClick = async (userId: string) => {
     const targetUser = mapUsers.find((u) => u.id === userId);
     if (targetUser) {
       setMapCenter([targetUser.lat, targetUser.lng]);
       
-      // Calculate distance from current location
       let distanceStr = "";
       if (currentLocation && !targetUser.isCurrentUser) {
         const dist = calculateDistance(
@@ -105,7 +95,6 @@ const MapPage = () => {
       
       setSelectedUser({ ...targetUser, address: undefined, distance: distanceStr });
       
-      // Fetch address
       const result = await getAddress(targetUser.lat, targetUser.lng);
       if (result) {
         const addr = result.address;
@@ -117,7 +106,7 @@ const MapPage = () => {
         
         setSelectedUser(prev => prev ? { 
           ...prev, 
-          address: parts.length > 0 ? `Near ${parts.join(", ")}` : result.display_name 
+          address: parts.length > 0 ? `${parts.join(", ")}` : result.display_name 
         } : null);
       }
     }
@@ -153,7 +142,7 @@ const MapPage = () => {
 
   return (
     <div className="h-screen w-full relative bg-background overflow-hidden">
-      {/* Map layer - Full screen */}
+      {/* Map layer */}
       <div className="absolute inset-0 z-0">
         <MapView 
           users={mapUsers} 
@@ -166,7 +155,7 @@ const MapPage = () => {
         />
       </div>
 
-      {/* Top buttons - Back and Chat */}
+      {/* Top buttons */}
       <div className="absolute top-4 left-4 right-4 z-30 flex items-center justify-between">
         {selectedUser ? (
           <motion.button
@@ -198,7 +187,7 @@ const MapPage = () => {
           initial={{ opacity: 0, scale: 0 }}
           animate={{ opacity: 1, scale: 1 }}
           onClick={() => openInMaps(selectedUser.lat, selectedUser.lng)}
-          className="absolute bottom-56 right-4 z-30 w-14 h-14 rounded-full bg-card shadow-card flex items-center justify-center"
+          className="absolute bottom-[60%] right-4 z-30 w-14 h-14 rounded-full bg-card shadow-card flex items-center justify-center"
         >
           <Navigation className="w-6 h-6 text-primary" />
         </motion.button>
@@ -206,7 +195,20 @@ const MapPage = () => {
 
       {/* Friend Detail Bottom Sheet */}
       <AnimatePresence>
-        {selectedUser && (
+        {selectedUser && !selectedUser.isCurrentUser && (
+          <FriendLocationDetail
+            friend={selectedUser}
+            onClose={closeUserDetail}
+            onShowTrail={handleShowHistory}
+            showingTrail={showingTrailFor === selectedUser.id}
+            isLoadingHistory={isLoadingHistory}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Self location card - simpler */}
+      <AnimatePresence>
+        {selectedUser && selectedUser.isCurrentUser && (
           <motion.div
             initial={{ y: "100%" }}
             animate={{ y: 0 }}
@@ -214,95 +216,23 @@ const MapPage = () => {
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
             className="absolute bottom-0 left-0 right-0 z-40"
           >
-            <div className="bg-card rounded-t-3xl shadow-elevated pt-3 pb-24">
-              {/* Handle bar */}
+            <div className="bg-card rounded-t-3xl shadow-elevated pt-3 pb-24 px-5">
               <div className="w-10 h-1 bg-muted-foreground/30 rounded-full mx-auto mb-4" />
-              
-              {/* User Info */}
-              <div className="px-5 pb-4">
-                <h2 className="text-xl font-bold text-foreground">
-                  {selectedUser.isCurrentUser ? "Your Location" : selectedUser.name}
-                </h2>
-                
-                {/* Address */}
-                <div className="flex items-start gap-1 mt-1">
-                  {isLoadingAddress || !selectedUser.address ? (
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Loader2 className="w-3 h-3 animate-spin" />
-                      <span>Getting address...</span>
-                    </div>
-                  ) : (
-                    <p className="text-sm text-muted-foreground">
-                      {selectedUser.address}
-                    </p>
-                  )}
-                </div>
-
-                {/* Distance and Time */}
-                <div className="flex items-center gap-3 mt-2 text-sm text-muted-foreground">
-                  {selectedUser.distance && (
-                    <div className="flex items-center gap-1">
-                      <MapPin className="w-4 h-4" />
-                      <span>{selectedUser.distance}</span>
-                    </div>
-                  )}
-                  {selectedUser.updatedAt && (
-                    <div className="flex items-center gap-1">
-                      <Clock className="w-4 h-4" />
-                      <span>{formatDistanceToNow(new Date(selectedUser.updatedAt), { addSuffix: false })}</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="px-5 flex gap-3">
-                <button
-                  onClick={() => openInMaps(selectedUser.lat, selectedUser.lng)}
-                  className="flex-1 flex flex-col items-center gap-1 py-3 px-2 border border-border rounded-xl hover:bg-muted transition-colors"
-                >
-                  <MapPin className="w-5 h-5 text-primary" />
-                  <span className="text-xs text-foreground">Place</span>
-                </button>
-                
-                <button
-                  onClick={() => window.open(`https://www.google.com/maps/@${selectedUser.lat},${selectedUser.lng},3a,75y,0h,90t/data=!3m6!1e1!3m4!1s!2e0!7i16384!8i8192`, '_blank')}
-                  className="flex-1 flex flex-col items-center gap-1 py-3 px-2 border border-border rounded-xl hover:bg-muted transition-colors"
-                >
-                  <Eye className="w-5 h-5 text-muted-foreground" />
-                  <span className="text-xs text-foreground">Street view</span>
-                </button>
-                
-                <button
-                  onClick={() => handleShowHistory(selectedUser.id)}
-                  className={`flex-1 flex flex-col items-center gap-1 py-3 px-2 border rounded-xl transition-colors ${
-                    showingTrailFor === selectedUser.id 
-                      ? "border-primary bg-primary/10" 
-                      : "border-border hover:bg-muted"
-                  }`}
-                >
-                  {isLoadingHistory ? (
-                    <Loader2 className="w-5 h-5 text-primary animate-spin" />
-                  ) : (
-                    <History className="w-5 h-5 text-muted-foreground" />
-                  )}
-                  <span className="text-xs text-foreground">History</span>
-                </button>
-                
-                <button
-                  onClick={() => openInMaps(selectedUser.lat, selectedUser.lng)}
-                  className="flex-1 flex flex-col items-center gap-1 py-3 px-2 border border-border rounded-xl hover:bg-muted transition-colors"
-                >
-                  <Car className="w-5 h-5 text-muted-foreground" />
-                  <span className="text-xs text-foreground">Driving</span>
-                </button>
-              </div>
+              <h2 className="text-lg font-bold text-foreground">Lokasi Anda</h2>
+              {selectedUser.address ? (
+                <p className="text-sm text-muted-foreground mt-1">{selectedUser.address}</p>
+              ) : (
+                <p className="text-sm text-muted-foreground mt-1">Mengambil alamat...</p>
+              )}
+              <p className="text-xs text-muted-foreground/70 font-mono mt-2">
+                {selectedUser.lat.toFixed(6)}, {selectedUser.lng.toFixed(6)}
+              </p>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Friends preview - Only when no user selected */}
+      {/* Friends preview */}
       {friendsLocations.length > 0 && !selectedUser && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}

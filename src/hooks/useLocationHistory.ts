@@ -57,7 +57,8 @@ export const useLocationHistory = () => {
         .select("*")
         .eq("user_id", userId)
         .gte("recorded_at", since.toISOString())
-        .order("recorded_at", { ascending: true });
+        .order("recorded_at", { ascending: true })
+        .limit(500);
 
       if (error) throw error;
       return data || [];
