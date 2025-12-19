@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { 
-  MapPin, 
-  Clock, 
-  History, 
-  Eye, 
-  Car, 
+import {
+  MapPin,
+  Clock,
+  History,
+  Eye,
+  Car,
   Loader2,
   Calendar,
   Route,
@@ -98,7 +98,7 @@ export const FriendLocationDetail = ({
       text: `Join me on LocateMe! Use my invite code: ${myInviteCode}`,
       url: window.location.origin,
     };
-    
+
     if (navigator.share) {
       try {
         await navigator.share(shareData);
@@ -122,14 +122,14 @@ export const FriendLocationDetail = ({
       // Generate static map URL
       const mapUrl = getStreetViewUrl(friend.lat, friend.lng);
       setStreetViewImage(mapUrl);
-      
+
       // Fetch place info from API
       const info = await getPlaceInfo(friend.lat, friend.lng);
       if (info?.place) {
         setPlaceInfo({ name: info.place.name });
       }
     };
-    
+
     loadPlaceInfo();
   }, [friend.lat, friend.lng]);
 
@@ -144,7 +144,7 @@ export const FriendLocationDetail = ({
     setIsLoadingPlaces(true);
     const history = await getLocationHistory(friend.id, 168); // Last 7 days
     setHistoryData(history);
-    
+
     // Process history to find places visited (cluster nearby points)
     const places = await processPlacesFromHistory(history);
     setPlacesVisited(places);
@@ -162,22 +162,22 @@ export const FriendLocationDetail = ({
       const R = 6371;
       const dLat = (lat2 - lat1) * Math.PI / 180;
       const dLng = (lng2 - lng1) * Math.PI / 180;
-      const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+      const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
         Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-        Math.sin(dLng/2) * Math.sin(dLng/2);
-      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        Math.sin(dLng / 2) * Math.sin(dLng / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
       return R * c;
     };
 
     for (let i = 0; i < history.length; i++) {
       const point = history[i];
-      
+
       if (currentCluster.length === 0) {
         currentCluster.push(point);
       } else {
         const lastPoint = currentCluster[currentCluster.length - 1];
         const distance = getDistance(lastPoint.latitude, lastPoint.longitude, point.latitude, point.longitude);
-        
+
         if (distance < CLUSTER_DISTANCE) {
           currentCluster.push(point);
         } else {
@@ -185,12 +185,12 @@ export const FriendLocationDetail = ({
           if (currentCluster.length >= 2) {
             const avgLat = currentCluster.reduce((sum, p) => sum + p.latitude, 0) / currentCluster.length;
             const avgLng = currentCluster.reduce((sum, p) => sum + p.longitude, 0) / currentCluster.length;
-            
+
             const arrivedAt = currentCluster[0].recorded_at;
             const leftAt = currentCluster[currentCluster.length - 1].recorded_at;
             const durationMs = new Date(leftAt).getTime() - new Date(arrivedAt).getTime();
             const durationMins = Math.round(durationMs / 60000);
-            
+
             places.push({
               id: currentCluster[0].id,
               address: currentCluster[0].address || `${avgLat.toFixed(4)}, ${avgLng.toFixed(4)}`,
@@ -210,7 +210,7 @@ export const FriendLocationDetail = ({
     if (currentCluster.length >= 2) {
       const avgLat = currentCluster.reduce((sum, p) => sum + p.latitude, 0) / currentCluster.length;
       const avgLng = currentCluster.reduce((sum, p) => sum + p.longitude, 0) / currentCluster.length;
-      
+
       places.push({
         id: currentCluster[0].id,
         address: currentCluster[0].address || `${avgLat.toFixed(4)}, ${avgLng.toFixed(4)}`,
@@ -260,14 +260,14 @@ export const FriendLocationDetail = ({
 
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
-    if (isToday(date)) return "Hari ini";
-    if (isYesterday(date)) return "Kemarin";
+    if (isToday(date)) return "Today";
+    if (isYesterday(date)) return "Yesterday";
     return format(date, "EEEE, d MMM", { locale: localeId });
   };
 
   const groupHistoryByDate = (history: LocationHistoryPoint[]) => {
     const groups: { [key: string]: LocationHistoryPoint[] } = {};
-    
+
     history.forEach(point => {
       const dateKey = format(new Date(point.recorded_at), "yyyy-MM-dd");
       if (!groups[dateKey]) {
@@ -285,18 +285,26 @@ export const FriendLocationDetail = ({
       animate={{ y: 0 }}
       exit={{ y: "100%" }}
       transition={{ type: "spring", damping: 25, stiffness: 300 }}
+      drag="y"
+      dragConstraints={{ top: 0 }}
+      dragElastic={0.2}
+      onDragEnd={(_, { offset, velocity }) => {
+        if (offset.y > 100 || velocity.y > 500) {
+          onClose();
+        }
+      }}
       className="absolute bottom-0 left-0 right-0 z-40 max-h-[85vh] flex flex-col"
     >
       <div className="bg-card rounded-t-3xl shadow-elevated flex flex-col max-h-full">
         {/* Handle bar */}
         <div className="w-10 h-1 bg-muted-foreground/30 rounded-full mx-auto mt-3 mb-2 flex-shrink-0" />
-        
+
         {/* Header */}
         <div className="px-5 pb-3 flex-shrink-0">
           <div className="flex items-center gap-3">
             {friend.avatarUrl ? (
-              <img 
-                src={friend.avatarUrl} 
+              <img
+                src={friend.avatarUrl}
                 alt={friend.name}
                 className="w-12 h-12 rounded-full object-cover border-2 border-primary"
               />
@@ -334,44 +342,40 @@ export const FriendLocationDetail = ({
         <div className="flex border-b border-border px-5 flex-shrink-0 overflow-x-auto">
           <button
             onClick={() => setActiveTab("location")}
-            className={`flex-1 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
-              activeTab === "location" 
-                ? "border-primary text-primary" 
-                : "border-transparent text-muted-foreground"
-            }`}
+            className={`flex-1 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${activeTab === "location"
+              ? "border-primary text-primary"
+              : "border-transparent text-muted-foreground"
+              }`}
           >
-            Lokasi
+            Location
           </button>
           <button
             onClick={() => setActiveTab("history")}
-            className={`flex-1 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
-              activeTab === "history" 
-                ? "border-primary text-primary" 
-                : "border-transparent text-muted-foreground"
-            }`}
+            className={`flex-1 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${activeTab === "history"
+              ? "border-primary text-primary"
+              : "border-transparent text-muted-foreground"
+              }`}
           >
-            Riwayat
+            History
           </button>
           <button
             onClick={() => setActiveTab("places")}
-            className={`flex-1 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
-              activeTab === "places" 
-                ? "border-primary text-primary" 
-                : "border-transparent text-muted-foreground"
-            }`}
+            className={`flex-1 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${activeTab === "places"
+              ? "border-primary text-primary"
+              : "border-transparent text-muted-foreground"
+              }`}
           >
-            Tempat
+            Places
           </button>
           <button
             onClick={() => setActiveTab("alerts")}
-            className={`flex-1 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap flex items-center justify-center gap-1 ${
-              activeTab === "alerts" 
-                ? "border-primary text-primary" 
-                : "border-transparent text-muted-foreground"
-            }`}
+            className={`flex-1 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap flex items-center justify-center gap-1 ${activeTab === "alerts"
+              ? "border-primary text-primary"
+              : "border-transparent text-muted-foreground"
+              }`}
           >
             <Bell className="w-4 h-4" />
-            Notif
+            Alerts
           </button>
         </div>
 
@@ -393,9 +397,9 @@ export const FriendLocationDetail = ({
                     className="flex flex-col items-center gap-2 py-4 border border-border rounded-xl hover:bg-muted transition-colors"
                   >
                     <MessageCircle className="w-6 h-6 text-primary" />
-                    <span className="text-xs text-foreground">Pesan</span>
+                    <span className="text-xs text-foreground">Message</span>
                   </button>
-                  
+
                   <button
                     onClick={handleShareInvite}
                     className="flex flex-col items-center gap-2 py-4 border border-border rounded-xl hover:bg-muted transition-colors"
@@ -403,7 +407,7 @@ export const FriendLocationDetail = ({
                     <Share2 className="w-6 h-6 text-muted-foreground" />
                     <span className="text-xs text-foreground">Share</span>
                   </button>
-                  
+
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
                       <button
@@ -416,7 +420,7 @@ export const FriendLocationDetail = ({
                           <AlertTriangle className="w-6 h-6 text-destructive" />
                         )}
                         <span className="text-xs text-destructive font-medium">
-                          {isSendingSOS ? "Mengirim..." : "SOS"}
+                          {isSendingSOS ? "Sending..." : "SOS"}
                         </span>
                       </button>
                     </AlertDialogTrigger>
@@ -424,47 +428,47 @@ export const FriendLocationDetail = ({
                       <AlertDialogHeader>
                         <AlertDialogTitle className="flex items-center gap-2 text-destructive">
                           <AlertTriangle className="w-5 h-5" />
-                          Kirim SOS Darurat?
+                          Send Emergency SOS?
                         </AlertDialogTitle>
                         <AlertDialogDescription>
-                          Lokasi Anda saat ini akan dikirim ke <strong>semua teman</strong> sebagai pesan darurat. 
-                          Gunakan fitur ini hanya dalam situasi darurat.
+                          Your current location will be sent to <strong>all friends</strong> as an emergency message.
+                          Use this feature only in emergencies.
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
-                        <AlertDialogCancel className="border-border">Batal</AlertDialogCancel>
-                        <AlertDialogAction 
+                        <AlertDialogCancel className="border-border">Cancel</AlertDialogCancel>
+                        <AlertDialogAction
                           onClick={handleSOS}
                           className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                         >
-                          🚨 Kirim SOS
+                          🚨 Send SOS
                         </AlertDialogAction>
                       </AlertDialogFooter>
                     </AlertDialogContent>
                   </AlertDialog>
-                  
+
                   <button
                     onClick={() => openInMaps(friend.lat, friend.lng)}
                     className="flex flex-col items-center gap-2 py-4 border border-border rounded-xl hover:bg-muted transition-colors"
                   >
                     <Car className="w-6 h-6 text-muted-foreground" />
-                    <span className="text-xs text-foreground">Arahkan</span>
+                    <span className="text-xs text-foreground">Directions</span>
                   </button>
                 </div>
 
                 {/* Location Details */}
                 <div className="mt-5 bg-muted/50 rounded-xl p-4">
-                  <h4 className="text-sm font-medium text-foreground mb-2">Detail Lokasi</h4>
+                  <h4 className="text-sm font-medium text-foreground mb-2">Location Details</h4>
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">Koordinat</span>
+                      <span className="text-muted-foreground">Coordinates</span>
                       <span className="text-foreground font-mono text-xs">
                         {friend.lat.toFixed(6)}, {friend.lng.toFixed(6)}
                       </span>
                     </div>
                     {friend.updatedAt && (
                       <div className="flex justify-between">
-                        <span className="text-muted-foreground">Terakhir update</span>
+                        <span className="text-muted-foreground">Last updated</span>
                         <span className="text-foreground">
                           {format(new Date(friend.updatedAt), "HH:mm, d MMM yyyy")}
                         </span>
@@ -472,7 +476,7 @@ export const FriendLocationDetail = ({
                     )}
                     {friend.address && (
                       <div className="flex justify-between">
-                        <span className="text-muted-foreground">Alamat</span>
+                        <span className="text-muted-foreground">Address</span>
                         <span className="text-foreground text-right max-w-[60%]">
                           {friend.address}
                         </span>
@@ -498,7 +502,7 @@ export const FriendLocationDetail = ({
                 ) : historyData.length === 0 ? (
                   <div className="text-center py-10">
                     <History className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
-                    <p className="text-muted-foreground">Belum ada riwayat lokasi</p>
+                    <p className="text-muted-foreground">No location history yet</p>
                   </div>
                 ) : (
                   <div className="space-y-6">
@@ -510,10 +514,10 @@ export const FriendLocationDetail = ({
                             {formatDate(points[0].recorded_at)}
                           </h4>
                           <span className="text-xs text-muted-foreground">
-                            ({points.length} titik)
+                            ({points.length} points)
                           </span>
                         </div>
-                        
+
                         <div className="space-y-2 ml-2 border-l-2 border-primary/20 pl-4">
                           {points.slice(0, 10).map((point, idx) => (
                             <button
@@ -535,7 +539,7 @@ export const FriendLocationDetail = ({
                           ))}
                           {points.length > 10 && (
                             <p className="text-xs text-muted-foreground pl-2">
-                              +{points.length - 10} titik lainnya
+                              +{points.length - 10} more points
                             </p>
                           )}
                         </div>
@@ -561,14 +565,14 @@ export const FriendLocationDetail = ({
                 ) : placesVisited.length === 0 ? (
                   <div className="text-center py-10">
                     <Building className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
-                    <p className="text-muted-foreground">Belum ada tempat yang dikunjungi</p>
+                    <p className="text-muted-foreground">No places visited yet</p>
                   </div>
                 ) : (
                   <div className="space-y-3">
                     <p className="text-xs text-muted-foreground mb-4">
-                      Tempat yang dikunjungi 7 hari terakhir
+                      Places visited in the last 7 days
                     </p>
-                    
+
                     {placesVisited.map((place, idx) => (
                       <button
                         key={place.id}
@@ -614,23 +618,23 @@ export const FriendLocationDetail = ({
               >
                 <div className="flex items-center justify-between mb-4">
                   <h4 className="text-sm font-medium text-foreground">
-                    Notifikasi Lokasi
+                    Location Alerts
                   </h4>
                   <button
                     onClick={() => setShowAddAlert(true)}
                     className="flex items-center gap-1 text-sm text-primary font-medium hover:underline"
                   >
                     <Plus className="w-4 h-4" />
-                    Tambah
+                    Add
                   </button>
                 </div>
 
                 <p className="text-xs text-muted-foreground mb-4">
-                  Dapatkan notifikasi ketika {friend.name} sampai di lokasi tertentu
+                  Get notified when {friend.name} arrives at a specific location
                 </p>
 
-                <LocationAlertList 
-                  friendId={friend.id} 
+                <LocationAlertList
+                  friendId={friend.id}
                   friendName={friend.name}
                 />
               </motion.div>

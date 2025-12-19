@@ -37,6 +37,7 @@ export const MessageBubble = ({
   const hasLocation = message.location_lat && message.location_lng;
   const hasImage = message.image_url;
   const hasReply = message.reply_to_content;
+  const isImageOnly = hasImage && (!message.content || message.content === '📷 Photo') && !hasReply && !hasLocation;
 
   return (
     <>
@@ -87,10 +88,11 @@ export const MessageBubble = ({
           {/* Message bubble */}
           <div
             className={cn(
-              'rounded-2xl px-4 py-2',
-              isOwn
+              'relative transition-all',
+              isImageOnly ? 'p-0 bg-transparent' : 'rounded-2xl px-4 py-2',
+              !isImageOnly && (isOwn
                 ? 'bg-primary text-primary-foreground rounded-br-sm'
-                : 'bg-white/10 text-white rounded-bl-sm'
+                : 'bg-white/10 text-white rounded-bl-sm')
             )}
           >
             {/* Reply preview */}
@@ -106,15 +108,19 @@ export const MessageBubble = ({
 
             {/* Image */}
             {hasImage && (
-              <div className="mb-2 relative">
+              <div className={cn("relative", !isImageOnly && "mb-2")}>
                 {!imageLoaded && (
-                  <div className="w-48 h-48 bg-white/10 rounded-lg animate-pulse" />
+                  <div className={cn(
+                    "bg-white/10 animate-pulse",
+                    isImageOnly ? "w-64 h-64 rounded-2xl" : "w-48 h-48 rounded-lg"
+                  )} />
                 )}
                 <img
                   src={message.image_url!}
                   alt="Shared image"
                   className={cn(
-                    'max-w-full rounded-lg cursor-pointer transition-opacity',
+                    'max-w-full cursor-pointer transition-opacity object-cover',
+                    isImageOnly ? 'rounded-2xl shadow-sm' : 'rounded-lg',
                     imageLoaded ? 'opacity-100' : 'opacity-0 absolute'
                   )}
                   style={{ maxHeight: 300 }}
@@ -153,14 +159,15 @@ export const MessageBubble = ({
 
             {/* Time and read status */}
             <div className={cn(
-              'flex items-center gap-1 mt-1 text-[10px]',
-              isOwn ? 'justify-end' : 'justify-start',
-              'opacity-60'
+              'flex items-center gap-1 text-[10px]',
+              isImageOnly
+                ? 'absolute bottom-2 right-2 bg-black/40 backdrop-blur-md px-2 py-1 rounded-full text-white shadow-sm'
+                : cn('mt-1 opacity-60', isOwn ? 'justify-end' : 'justify-start')
             )}>
               <span>{format(new Date(message.created_at), 'HH:mm')}</span>
               {isOwn && (
                 message.is_read ? (
-                  <CheckCheck className="w-3 h-3 text-blue-400" />
+                  <CheckCheck className={cn("w-3 h-3", isImageOnly ? "text-blue-400" : "text-blue-400")} />
                 ) : (
                   <Check className="w-3 h-3" />
                 )
@@ -174,18 +181,18 @@ export const MessageBubble = ({
       <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
         <AlertDialogContent className="bg-card border-border">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-foreground">Hapus Pesan?</AlertDialogTitle>
+            <AlertDialogTitle className="text-foreground">Delete Message?</AlertDialogTitle>
             <AlertDialogDescription className="text-muted-foreground">
-              Pesan ini akan dihapus secara permanen dan tidak dapat dikembalikan.
+              This message will be permanently deleted and cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="bg-muted text-foreground border-border">Batal</AlertDialogCancel>
+            <AlertDialogCancel className="bg-muted text-foreground border-border">Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => onDelete(message.id)}
               className="bg-destructive text-destructive-foreground"
             >
-              Hapus
+              Delete
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

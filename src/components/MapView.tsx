@@ -94,7 +94,7 @@ const createCustomIcon = (user: MapUser, isSelected: boolean = false) => {
           overflow: hidden;
           border: ${borderWidth}px solid white;
           box-shadow: 0 4px 12px rgba(0,0,0,0.25);
-          background: linear-gradient(135deg, ${isCurrentUser ? '#22c55e, #16a34a' : '#3b82f6, #2563eb'});
+          background: linear-gradient(135deg, ${isCurrentUser ? '#3fb68b, #2d9a7a' : '#3b82f6, #2563eb'});
           display: flex;
           align-items: center;
           justify-content: center;
@@ -125,7 +125,7 @@ export const MapView = ({
   className,
   onUserClick,
   trail,
-  trailColor = "#22c55e",
+  trailColor = "#3fb68b",
   selectedUserId,
 }: MapViewProps) => {
   const mapRef = useRef<HTMLDivElement>(null);
@@ -234,7 +234,7 @@ export const MapView = ({
         if (isFirst || isLast) {
           const marker = L.circleMarker([point.lat, point.lng], {
             radius: 8,
-            fillColor: isFirst ? "#22c55e" : "#ef4444",
+            fillColor: isFirst ? "#3fb68b" : "#ef4444",
             color: "white",
             weight: 3,
             opacity: 1,

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, MessageCircle, Navigation } from "lucide-react";
+import { ArrowLeft, MessageCircle, Navigation, Share2, Siren } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { MapView } from "@/components/MapView";
 import { BottomNavigation } from "@/components/BottomNavigation";
 import { FriendLocationDetail } from "@/components/FriendLocationDetail";
@@ -31,6 +32,7 @@ interface TrailPoint {
 }
 
 const MapPage = () => {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { profile } = useProfile();
   const { currentLocation, friendsLocations, isTracking } = useLocationTracking();
@@ -58,7 +60,7 @@ const MapPage = () => {
   useEffect(() => {
     friendsLocations.forEach(loc => {
       const lastUpdate = lastCheckedRef.current.get(loc.user_id);
-      
+
       // Only check if location has changed
       if (lastUpdate !== loc.updated_at) {
         checkAlerts(loc.user_id, loc.latitude, loc.longitude);
@@ -71,10 +73,10 @@ const MapPage = () => {
     const R = 6371;
     const dLat = (lat2 - lat1) * Math.PI / 180;
     const dLng = (lng2 - lng1) * Math.PI / 180;
-    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
       Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-      Math.sin(dLng/2) * Math.sin(dLng/2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      Math.sin(dLng / 2) * Math.sin(dLng / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     return R * c;
   };
 
@@ -102,7 +104,7 @@ const MapPage = () => {
     const targetUser = mapUsers.find((u) => u.id === userId);
     if (targetUser) {
       setMapCenter([targetUser.lat, targetUser.lng]);
-      
+
       let distanceStr = "";
       if (currentLocation && !targetUser.isCurrentUser) {
         const dist = calculateDistance(
@@ -113,9 +115,9 @@ const MapPage = () => {
         );
         distanceStr = dist < 1 ? `${Math.round(dist * 1000)}m` : `${dist.toFixed(1)}km`;
       }
-      
+
       setSelectedUser({ ...targetUser, address: undefined, distance: distanceStr });
-      
+
       const result = await getAddress(targetUser.lat, targetUser.lng);
       if (result) {
         const addr = result.address;
@@ -124,10 +126,10 @@ const MapPage = () => {
           addr.suburb || addr.village,
           addr.city || addr.county,
         ].filter(Boolean);
-        
-        setSelectedUser(prev => prev ? { 
-          ...prev, 
-          address: parts.length > 0 ? `${parts.join(", ")}` : result.display_name 
+
+        setSelectedUser(prev => prev ? {
+          ...prev,
+          address: parts.length > 0 ? `${parts.join(", ")}` : result.display_name
         } : null);
       }
     }
@@ -152,7 +154,7 @@ const MapPage = () => {
       lng: h.longitude,
       recorded_at: h.recorded_at,
     }));
-    
+
     setTrail(trailPoints);
     setShowingTrailFor(userId);
   };
@@ -172,10 +174,10 @@ const MapPage = () => {
     <div className="h-screen w-full relative bg-background overflow-hidden">
       {/* Map layer */}
       <div className="absolute inset-0 z-0">
-        <MapView 
-          users={mapUsers} 
-          center={mapCenter} 
-          className="h-full w-full" 
+        <MapView
+          users={mapUsers}
+          center={mapCenter}
+          className="h-full w-full"
           onUserClick={handleUserClick}
           trail={trail}
           trailColor={showingTrailFor === user?.id ? "#22c55e" : "#3b82f6"}
@@ -184,29 +186,56 @@ const MapPage = () => {
       </div>
 
       {/* Top buttons */}
-      <div className="absolute top-4 left-4 right-4 z-30 flex items-center justify-between">
+      <div className="absolute top-4 left-4 right-4 z-30 flex items-center justify-between pointer-events-none">
         {selectedUser ? (
           <motion.button
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             onClick={closeUserDetail}
-            className="w-12 h-12 rounded-full bg-card shadow-card flex items-center justify-center"
+            className="w-12 h-12 rounded-full bg-card shadow-card flex items-center justify-center pointer-events-auto"
           >
             <ArrowLeft className="w-5 h-5 text-foreground" />
           </motion.button>
         ) : (
-          <div />
-        )}
-        
-        {selectedUser && !selectedUser.isCurrentUser && (
           <motion.button
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="w-12 h-12 rounded-full bg-card shadow-card flex items-center justify-center"
+            onClick={() => navigate("/chat")}
+            className="w-12 h-12 rounded-full bg-black/40 backdrop-blur-md border border-white/10 text-white shadow-lg flex items-center justify-center pointer-events-auto hover:bg-black/50 transition-colors"
+          >
+            <MessageCircle className="w-5 h-5" />
+          </motion.button>
+        )}
+
+        {selectedUser && !selectedUser.isCurrentUser ? (
+          <motion.button
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="w-12 h-12 rounded-full bg-card shadow-card flex items-center justify-center pointer-events-auto"
           >
             <MessageCircle className="w-5 h-5 text-foreground" />
           </motion.button>
-        )}
+        ) : !selectedUser ? (
+          <div className="flex items-center gap-3 pointer-events-auto">
+            <motion.button
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.1 }}
+              className="w-12 h-12 rounded-full bg-red-500/80 backdrop-blur-md border border-white/10 text-white shadow-lg flex items-center justify-center hover:bg-red-600/80 transition-colors"
+            >
+              <Siren className="w-5 h-5 animate-pulse" />
+            </motion.button>
+            <motion.button
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.2 }}
+              onClick={() => navigate("/invite")}
+              className="w-12 h-12 rounded-full bg-black/40 backdrop-blur-md border border-white/10 text-white shadow-lg flex items-center justify-center hover:bg-black/50 transition-colors"
+            >
+              <Share2 className="w-5 h-5" />
+            </motion.button>
+          </div>
+        ) : null}
       </div>
 
       {/* Directions FAB */}
@@ -246,11 +275,11 @@ const MapPage = () => {
           >
             <div className="bg-card rounded-t-3xl shadow-elevated pt-3 pb-24 px-5">
               <div className="w-10 h-1 bg-muted-foreground/30 rounded-full mx-auto mb-4" />
-              <h2 className="text-lg font-bold text-foreground">Lokasi Anda</h2>
+              <h2 className="text-lg font-bold text-foreground">Your Location</h2>
               {selectedUser.address ? (
                 <p className="text-sm text-muted-foreground mt-1">{selectedUser.address}</p>
               ) : (
-                <p className="text-sm text-muted-foreground mt-1">Mengambil alamat...</p>
+                <p className="text-sm text-muted-foreground mt-1">Fetching address...</p>
               )}
               <p className="text-xs text-muted-foreground/70 font-mono mt-2">
                 {selectedUser.lat.toFixed(6)}, {selectedUser.lng.toFixed(6)}
@@ -265,16 +294,16 @@ const MapPage = () => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="absolute bottom-24 left-4 right-4 z-30"
+          className="absolute bottom-24 left-0 right-0 z-30"
         >
-          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-            {friendsLocations.slice(0, 4).map((loc) => (
+          <div className="flex gap-2 overflow-x-auto pb-2 px-4 scrollbar-hide">
+            {friendsLocations.map((loc) => (
               <button
                 key={loc.user_id}
                 onClick={() => handleUserClick(loc.user_id)}
-                className="flex-shrink-0 bg-card rounded-2xl p-3 flex items-center gap-3 shadow-card border border-border/50 hover:shadow-elevated transition-shadow"
+                className="flex-shrink-0 bg-black/60 backdrop-blur-md rounded-full p-2 pr-6 flex items-center gap-3 shadow-lg border border-white/10 hover:bg-black/70 transition-all"
               >
-                <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-bold overflow-hidden">
+                <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary-foreground font-bold overflow-hidden border border-white/10">
                   {loc.profile?.avatar_url ? (
                     <img src={loc.profile.avatar_url} className="w-full h-full rounded-full object-cover" />
                   ) : (
@@ -282,10 +311,10 @@ const MapPage = () => {
                   )}
                 </div>
                 <div className="text-left">
-                  <p className="text-sm font-medium text-foreground truncate max-w-[80px]">
+                  <p className="text-sm font-bold text-white truncate max-w-[100px]">
                     {loc.profile?.full_name || loc.profile?.username}
                   </p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-[10px] text-white/70 font-medium">
                     {formatDistanceToNow(new Date(loc.updated_at), { addSuffix: true })}
                   </p>
                 </div>

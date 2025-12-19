@@ -21,18 +21,18 @@ export const LocationPin = ({ name, imageUrl, isCurrentUser = false, className }
       <div className="absolute -inset-4">
         <div className={cn(
           "absolute inset-0 rounded-full animate-ping opacity-30",
-          isCurrentUser ? "bg-teal" : "bg-coral"
+          isCurrentUser ? "bg-primary" : "bg-coral"
         )} style={{ animationDuration: "2s" }} />
         <div className={cn(
           "absolute inset-2 rounded-full animate-ping opacity-20",
-          isCurrentUser ? "bg-teal" : "bg-coral"
+          isCurrentUser ? "bg-primary" : "bg-coral"
         )} style={{ animationDuration: "2s", animationDelay: "0.5s" }} />
       </div>
 
       {/* Avatar */}
       <div className={cn(
         "relative rounded-full p-1",
-        isCurrentUser ? "bg-gradient-primary shadow-glow-teal" : "bg-gradient-warm shadow-glow-coral"
+        isCurrentUser ? "bg-gradient-primary shadow-glow-green" : "bg-gradient-warm shadow-glow-coral"
       )}>
         <UserAvatar
           name={name}
@@ -46,7 +46,7 @@ export const LocationPin = ({ name, imageUrl, isCurrentUser = false, className }
         "w-0 h-0 -mt-1",
         "border-l-[8px] border-r-[8px] border-t-[12px]",
         "border-l-transparent border-r-transparent",
-        isCurrentUser ? "border-t-teal" : "border-t-coral"
+        isCurrentUser ? "border-t-primary" : "border-t-coral"
       )} />
 
       {/* Name label */}

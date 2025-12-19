@@ -14,18 +14,18 @@ const Index = () => {
     if (user) {
       navigate("/map");
     } else {
-      navigate("/auth");
+      navigate("/onboarding");
     }
   };
 
   return (
     <div className="min-h-screen overflow-hidden relative">
       {/* Background Image */}
-      <div 
+      <div
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
         style={{ backgroundImage: `url(${bgBlur})` }}
       />
-      
+
       {/* Install Button - Top Right */}
       <motion.button
         initial={{ opacity: 0, y: -10 }}
@@ -37,7 +37,7 @@ const Index = () => {
         <Download className="w-4 h-4" />
         Install App
       </motion.button>
-      
+
       {/* Hero Section */}
       <div className="relative min-h-screen flex flex-col items-center justify-center px-6 py-12">
 
@@ -52,15 +52,13 @@ const Index = () => {
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ type: "spring", stiffness: 200, delay: 0.2 }}
-            className="w-44 h-44 mx-auto"
+            className="w-64 h-24 mx-auto"
           >
             <img src={logoImage} alt="LocateMe Logo" className="w-full h-full object-contain" />
           </motion.div>
 
           <div className="space-y-4">
-            <h1 className="text-4xl md:text-5xl font-bold text-white">
-              <span className="text-primary">LocateMe</span>
-            </h1>
+            {/* Text removed as per request, relying on logo */}
             <p className="text-lg text-white/70">
               Share your location with family & friends in real-time
             </p>

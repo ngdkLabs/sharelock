@@ -15,8 +15,8 @@
     --popover: 140 15% 22%;
     --popover-foreground: 0 0% 100%;
 
-    --primary: 145 70% 50%;
-    --primary-foreground: 140 30% 15%;
+    --primary: 160 60% 45%;
+    --primary-foreground: 0 0% 100%;
 
     --secondary: 140 15% 30%;
     --secondary-foreground: 0 0% 95%;
@@ -24,7 +24,7 @@
     --muted: 140 15% 28%;
     --muted-foreground: 140 10% 70%;
 
-    --accent: 145 60% 45%;
+    --accent: 160 55% 40%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 72% 51%;
@@ -32,40 +32,40 @@
 
     --border: 140 15% 35%;
     --input: 140 15% 32%;
-    --ring: 145 70% 50%;
+    --ring: 160 60% 45%;
 
     --radius: 0.75rem;
 
     /* Custom colors */
-    --green: 145 70% 50%;
-    --green-light: 145 40% 35%;
-    --green-glow: 145 70% 60%;
+    --green: 160 60% 45%;
+    --green-light: 160 40% 35%;
+    --green-glow: 160 60% 50%;
     --blue: 200 85% 50%;
     --blue-light: 200 50% 35%;
     --orange: 25 95% 55%;
     --orange-light: 25 60% 35%;
     --red: 0 72% 51%;
     --red-light: 0 50% 35%;
-    
+
     /* Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(145, 70%, 50%), hsl(165, 70%, 45%));
+    --gradient-primary: linear-gradient(135deg, hsl(160, 60%, 45%), hsl(170, 55%, 40%));
     --gradient-secondary: linear-gradient(135deg, hsl(200, 85%, 50%), hsl(220, 80%, 55%));
     --gradient-accent: linear-gradient(135deg, hsl(25, 95%, 55%), hsl(35, 95%, 50%));
-    
+
     /* Shadows */
     --shadow-soft: 0 2px 8px -2px hsl(0 0% 0% / 0.2);
     --shadow-card: 0 4px 16px -4px hsl(0 0% 0% / 0.25);
     --shadow-elevated: 0 8px 24px -6px hsl(0 0% 0% / 0.3);
-    --shadow-glow-green: 0 4px 20px hsl(145 70% 50% / 0.35);
+    --shadow-glow-green: 0 4px 20px hsl(160 60% 45% / 0.3);
 
     --sidebar-background: 140 15% 22%;
     --sidebar-foreground: 0 0% 95%;
-    --sidebar-primary: 145 70% 50%;
-    --sidebar-primary-foreground: 140 30% 15%;
+    --sidebar-primary: 160 60% 45%;
+    --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 140 15% 28%;
     --sidebar-accent-foreground: 0 0% 95%;
     --sidebar-border: 140 15% 35%;
-    --sidebar-ring: 145 70% 50%;
+    --sidebar-ring: 160 60% 45%;
   }
 }
 
@@ -171,18 +171,24 @@
   }
 
   @keyframes float {
-    0%, 100% {
+
+    0%,
+    100% {
       transform: translateY(0) rotate(0deg);
     }
+
     50% {
       transform: translateY(-20px) rotate(2deg);
     }
   }
 
   @keyframes gradient-shift {
-    0%, 100% {
+
+    0%,
+    100% {
       background-position: 0% 50%;
     }
+
     50% {
       background-position: 100% 50%;
     }
@@ -193,6 +199,7 @@
       transform: scale(1);
       opacity: 1;
     }
+
     100% {
       transform: scale(2.5);
       opacity: 0;
@@ -233,4 +240,14 @@
 /* Safe area for mobile */
 .pb-safe {
   padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+/* Hide scrollbar */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
 }

@@ -19,6 +19,7 @@ interface FriendCardProps {
   isOnline?: boolean;
   onLocate?: () => void;
   onRemove?: () => void;
+  onClick?: () => void;
   className?: string;
 }
 
@@ -31,6 +32,7 @@ export const FriendCard = ({
   isOnline = false,
   onLocate,
   onRemove,
+  onClick,
   className,
 }: FriendCardProps) => {
   return (
@@ -38,6 +40,7 @@ export const FriendCard = ({
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       whileTap={{ scale: 0.98 }}
+      onClick={onClick}
       className={cn(
         "bg-card rounded-2xl p-4 flex items-center gap-4 cursor-pointer shadow-soft border border-border/50 transition-all hover:shadow-card",
         className
@@ -60,7 +63,7 @@ export const FriendCard = ({
             </span>
           )}
         </div>
-        
+
         {location && (
           <div className="flex items-center gap-1.5 mt-1 text-sm text-muted-foreground">
             <MapPin className="w-3.5 h-3.5 text-primary" />
@@ -101,7 +104,7 @@ export const FriendCard = ({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="bg-card border border-border shadow-elevated rounded-xl">
-            <DropdownMenuItem 
+            <DropdownMenuItem
               onClick={(e) => {
                 e.stopPropagation();
                 onRemove?.();

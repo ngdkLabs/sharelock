@@ -1,11 +1,13 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-    
-    <!-- Content Security Policy to prevent XSS attacks -->
-    <meta http-equiv="Content-Security-Policy" content="
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+
+  <!-- Content Security Policy to prevent XSS attacks -->
+  <meta http-equiv="Content-Security-Policy" content="
       default-src 'self';
       script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.supabase.co;
       style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com;
@@ -16,32 +18,33 @@
       base-uri 'self';
       form-action 'self';
     ">
-    
-    <title>LocateMe - Location Sharing</title>
-    <meta name="description" content="Share your location with friends in real-time" />
-    
-    <!-- PWA Meta Tags -->
-    <meta name="theme-color" content="#6366f1" />
-    <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="LocateMe" />
-    <link rel="apple-touch-icon" href="/pwa-192x192.png" />
-    <link rel="manifest" href="/manifest.webmanifest" />
 
-    <!-- Open Graph -->
-    <meta property="og:title" content="LocateMe - Location Sharing" />
-    <meta property="og:description" content="Share your location with friends in real-time" />
-    <meta property="og:type" content="website" />
-    <meta property="og:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+  <title>ShareLock - Location Sharing</title>
+  <meta name="description" content="Share your location with friends in real-time" />
 
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:site" content="@Lovable" />
-    <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
-  </head>
+  <!-- PWA Meta Tags -->
+  <meta name="theme-color" content="#6366f1" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="LocateMe" />
+  <link rel="apple-touch-icon" href="/pwa-192x192.png" />
+  <link rel="manifest" href="/manifest.webmanifest" />
 
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+  <!-- Open Graph -->
+  <meta property="og:title" content="LocateMe - Location Sharing" />
+  <meta property="og:description" content="Share your location with friends in real-time" />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:site" content="@Lovable" />
+  <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+</head>
+
+<body>
+  <div id="root"></div>
+  <script type="module" src="/src/main.tsx"></script>
+</body>
+
 </html>

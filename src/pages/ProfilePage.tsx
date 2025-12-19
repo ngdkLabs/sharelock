@@ -17,6 +17,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import bgBlur from "@/assets/bg-blur.png";
 
 const ProfilePage = () => {
   const navigate = useNavigate();
@@ -47,7 +48,7 @@ const ProfilePage = () => {
     const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'];
     const allowedExtensions = ['.jpg', '.jpeg', '.png', '.webp'];
     const fileExtension = '.' + file.name.split('.').pop()?.toLowerCase();
-    
+
     if (!allowedTypes.includes(file.type) || !allowedExtensions.includes(fileExtension)) {
       toast.error("Please select a JPG, PNG, or WebP image");
       return;
@@ -110,9 +111,14 @@ const ProfilePage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background pb-24">
+    <div className="min-h-screen relative pb-24">
+      <div 
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+        style={{ backgroundImage: `url(${bgBlur})` }}
+      />
+      
       {/* Header */}
-      <div className="bg-card border-b border-border px-4 py-6 sticky top-0 z-40">
+      <div className="relative z-10 bg-card/80 backdrop-blur-sm border-b border-border px-4 py-6 sticky top-0 z-40">
         <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="text-center space-y-4">
           <div className="relative inline-block">
             <button onClick={handleAvatarClick} className="relative group">
@@ -168,7 +174,7 @@ const ProfilePage = () => {
         </motion.div>
       </div>
 
-      <div className="px-4 py-4 space-y-4">
+      <div className="relative z-10 px-4 py-4 space-y-4">
         {/* Quick Stats */}
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="grid grid-cols-2 gap-3">
           <div className="bg-card rounded-2xl p-4 text-center shadow-soft border border-border/50">
@@ -192,8 +198,8 @@ const ProfilePage = () => {
                 <MapPin className="w-5 h-5 text-primary" />
                 <span className="font-medium text-foreground">Share Location</span>
               </div>
-              <Switch 
-                checked={profile?.is_sharing_location ?? true} 
+              <Switch
+                checked={profile?.is_sharing_location ?? true}
                 onCheckedChange={handleToggleSharing}
               />
             </div>
@@ -205,8 +211,8 @@ const ProfilePage = () => {
                   <p className="text-xs text-muted-foreground">Sound & vibration for SOS</p>
                 </div>
               </div>
-              <Switch 
-                checked={profile?.sos_alarm_enabled ?? true} 
+              <Switch
+                checked={profile?.sos_alarm_enabled ?? true}
                 onCheckedChange={handleToggleSOSAlarm}
               />
             </div>
@@ -240,8 +246,8 @@ const ProfilePage = () => {
           <p className="text-sm font-medium text-foreground">{user?.email}</p>
         </motion.div>
 
-        <Button 
-          variant="outline" 
+        <Button
+          variant="outline"
           className="w-full h-12 text-destructive border-destructive/30 hover:bg-destructive/10 rounded-xl"
           onClick={handleSignOut}
         >

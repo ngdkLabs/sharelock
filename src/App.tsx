@@ -14,6 +14,7 @@ import InvitePage from "./pages/InvitePage";
 import ProfilePage from "./pages/ProfilePage";
 import ChatPage from "./pages/ChatPage";
 import InstallPage from "./pages/InstallPage";
+import OnboardingPage from "./pages/OnboardingPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -35,6 +36,7 @@ const App = () => (
             <div className="dark">
               <Routes>
                 <Route path="/" element={<Index />} />
+                <Route path="/onboarding" element={<OnboardingPage />} />
                 <Route path="/auth" element={<AuthPage />} />
                 <Route path="/install" element={<InstallPage />} />
                 <Route path="/map" element={

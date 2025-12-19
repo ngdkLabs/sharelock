@@ -7,6 +7,7 @@ import { BottomNavigation } from "@/components/BottomNavigation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useFriends } from "@/hooks/useFriends";
 import { toast } from "sonner";
+import bgBlur from "@/assets/bg-blur.png";
 
 const InvitePage = () => {
   const { myInviteCode, addFriendByCode, refreshInviteCode, loading } = useFriends();
@@ -16,7 +17,7 @@ const InvitePage = () => {
     setIsJoining(true);
     const { error } = await addFriendByCode(code);
     setIsJoining(false);
-    
+
     if (error) {
       toast.error(error);
     } else {
@@ -32,9 +33,14 @@ const InvitePage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background pb-24">
+    <div className="min-h-screen relative pb-24">
+      <div 
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+        style={{ backgroundImage: `url(${bgBlur})` }}
+      />
+      
       {/* Header */}
-      <div className="bg-card border-b border-border px-4 py-6 sticky top-0 z-40">
+      <div className="relative z-10 bg-card/80 backdrop-blur-sm border-b border-border px-4 py-6 sticky top-0 z-40">
         <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="text-center">
           <div className="w-14 h-14 mx-auto mb-3 rounded-2xl bg-primary flex items-center justify-center shadow-glow-green">
             <UserPlus className="w-7 h-7 text-primary-foreground" />
@@ -44,7 +50,7 @@ const InvitePage = () => {
         </motion.div>
       </div>
 
-      <div className="px-4 py-4">
+      <div className="relative z-10 px-4 py-4">
         <Tabs defaultValue="share" className="w-full">
           <TabsList className="w-full h-12 rounded-xl bg-muted p-1">
             <TabsTrigger value="share" className="flex-1 rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-soft font-medium">

@@ -71,7 +71,7 @@ const AuthPage = () => {
   return (
     <div className="min-h-screen overflow-hidden relative">
       {/* Background Image */}
-      <div 
+      <div
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
         style={{ backgroundImage: `url(${bgBlur})` }}
       />
@@ -82,9 +82,10 @@ const AuthPage = () => {
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           transition={{ type: "spring", stiffness: 200 }}
-          className="w-40 h-40 mb-8"
+          className="w-64 h-64 mb-2 flex flex-col items-center justify-center"
         >
           <img src={logoImage} alt="LocateMe Logo" className="w-full h-full object-contain" />
+          <p className="text-white/80 text-lg font-medium -mt-10 tracking-wider">Stay Connected, Stay Safe</p>
         </motion.div>
 
         <motion.div
