@@ -14,6 +14,8 @@ export interface Message {
   location_lat?: number | null;
   location_lng?: number | null;
   location_address?: string | null;
+  audio_url?: string | null;
+  audio_duration?: number | null;
 }
 
 export const useMessages = (friendId: string | null) => {
@@ -176,6 +178,47 @@ export const useMessages = (friendId: string | null) => {
     }
   };
 
+  // Send voice message
+  const sendVoiceMessage = async (audioBlob: Blob, duration: number) => {
+    if (!user || !friendId) return null;
+
+    try {
+      const fileName = `${user.id}/${Date.now()}.webm`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('voice-messages')
+        .upload(fileName, audioBlob);
+
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = supabase.storage
+        .from('voice-messages')
+        .getPublicUrl(fileName);
+
+      const { data, error } = await supabase
+        .from('messages')
+        .insert({
+          sender_id: user.id,
+          receiver_id: friendId,
+          content: '🎤 Pesan suara',
+          audio_url: urlData.publicUrl,
+          audio_duration: duration
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    } catch (error: any) {
+      toast({
+        title: 'Gagal mengirim pesan suara',
+        description: error.message,
+        variant: 'destructive'
+      });
+      return null;
+    }
+  };
+
   // Get unread message count
   const getUnreadCount = async () => {
     if (!user) return 0;
@@ -246,6 +289,7 @@ export const useMessages = (friendId: string | null) => {
     sendMessage,
     sendImageMessage,
     sendLocationMessage,
+    sendVoiceMessage,
     getUnreadCount,
     refetch: fetchMessages
   };
