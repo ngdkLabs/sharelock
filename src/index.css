@@ -86,21 +86,7 @@
 
 @layer components {
   .glass {
-    @apply bg-card/80 backdrop-blur-xl border border-white/10 shadow-soft;
-  }
-
-  .glass-button {
-    @apply bg-white/10 backdrop-blur-xl border border-white/20 shadow-lg;
-    background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
-  }
-
-  .glass-button:hover {
-    @apply bg-white/20 border-white/30;
-  }
-
-  .glass-nav {
-    @apply backdrop-blur-xl border border-white/10;
-    background: linear-gradient(135deg, rgba(30,30,50,0.85) 0%, rgba(20,20,40,0.9) 100%);
+    @apply bg-card border border-border shadow-soft;
   }
 
   .gradient-text {
@@ -247,46 +233,4 @@
 /* Safe area for mobile */
 .pb-safe {
   padding-bottom: env(safe-area-inset-bottom, 0);
-}
-
-.pt-safe {
-  padding-top: env(safe-area-inset-top, 0);
-}
-
-/* Mobile-only optimizations */
-@media (max-width: 640px) {
-  html {
-    -webkit-tap-highlight-color: transparent;
-    -webkit-touch-callout: none;
-    touch-action: manipulation;
-  }
-  
-  body {
-    overscroll-behavior: none;
-  }
-  
-  input, textarea, select {
-    font-size: 16px !important; /* Prevents iOS zoom on focus */
-  }
-}
-
-/* Prevent text selection on buttons */
-button {
-  -webkit-user-select: none;
-  user-select: none;
-}
-
-/* Smooth scrolling for mobile */
-.scroll-smooth {
-  -webkit-overflow-scrolling: touch;
-}
-
-/* Hide scrollbar but allow scrolling */
-.scrollbar-hide {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-
-.scrollbar-hide::-webkit-scrollbar {
-  display: none;
 }
