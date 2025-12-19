@@ -21,8 +21,8 @@ export const BottomNavigation = () => {
       animate={{ y: 0 }}
       className="fixed bottom-0 left-0 right-0 z-50 pb-safe pointer-events-none"
     >
-      <div className="mx-4 mb-4 pointer-events-auto">
-        <div className="bg-card rounded-2xl p-1.5 flex justify-around items-center shadow-elevated border border-border/50">
+      <div className="mx-3 mb-3 sm:mx-4 sm:mb-4 pointer-events-auto">
+        <div className="glass-nav rounded-2xl p-1 sm:p-1.5 flex justify-around items-center shadow-elevated">
           {navItems.map((item) => {
             const isActive = location.pathname === item.path;
             const Icon = item.icon;
@@ -33,7 +33,7 @@ export const BottomNavigation = () => {
                 whileTap={{ scale: 0.9 }}
                 onClick={() => navigate(item.path)}
                 className={cn(
-                  "relative flex flex-col items-center gap-0.5 px-5 py-2 rounded-xl transition-all",
+                  "relative flex flex-col items-center gap-0.5 px-3 py-2 sm:px-5 rounded-xl transition-all min-w-[52px]",
                   isActive 
                     ? "text-primary" 
                     : "text-muted-foreground hover:text-foreground"
@@ -42,16 +42,16 @@ export const BottomNavigation = () => {
                 {isActive && (
                   <motion.div
                     layoutId="activeTab"
-                    className="absolute inset-0 bg-primary/10 rounded-xl"
+                    className="absolute inset-0 bg-primary/15 rounded-xl"
                     transition={{ type: "spring", stiffness: 500, damping: 30 }}
                   />
                 )}
                 <Icon className={cn(
-                  "w-5 h-5 relative z-10 transition-colors",
+                  "w-5 h-5 sm:w-5 sm:h-5 relative z-10 transition-colors",
                   isActive && "text-primary"
                 )} />
                 <span className={cn(
-                  "text-[10px] font-medium relative z-10",
+                  "text-[9px] sm:text-[10px] font-medium relative z-10",
                   isActive && "text-primary font-semibold"
                 )}>
                   {item.label}
