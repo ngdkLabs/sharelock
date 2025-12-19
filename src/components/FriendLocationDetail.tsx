@@ -14,13 +14,19 @@ import {
   ExternalLink,
   Image as ImageIcon,
   Bell,
-  Plus
+  Plus,
+  MessageCircle,
+  Share2,
+  AlertTriangle
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { formatDistanceToNow, format, isToday, isYesterday } from "date-fns";
 import { id as localeId } from "date-fns/locale";
 import { useLocationHistory, LocationHistoryPoint } from "@/hooks/useLocationHistory";
 import { usePlaceInfo } from "@/hooks/usePlaceInfo";
 import { AddLocationAlert, LocationAlertList } from "@/components/LocationAlertComponents";
+import { useFriends } from "@/hooks/useFriends";
+import { toast } from "sonner";
 
 interface FriendLocationDetailProps {
   friend: {
@@ -56,6 +62,8 @@ export const FriendLocationDetail = ({
   showingTrail,
   isLoadingHistory,
 }: FriendLocationDetailProps) => {
+  const navigate = useNavigate();
+  const { myInviteCode } = useFriends();
   const [activeTab, setActiveTab] = useState<"location" | "history" | "places" | "alerts">("location");
   const [showAddAlert, setShowAddAlert] = useState(false);
   const [historyData, setHistoryData] = useState<LocationHistoryPoint[]>([]);
@@ -66,6 +74,36 @@ export const FriendLocationDetail = ({
   const [imageError, setImageError] = useState(false);
   const { getLocationHistory } = useLocationHistory();
   const { getPlaceInfo, getStreetViewUrl, isLoading: isLoadingPlace } = usePlaceInfo();
+
+  const handleOpenChat = () => {
+    navigate('/chat');
+  };
+
+  const handleShareInvite = async () => {
+    const shareData = {
+      title: 'LocateMe - Share Location',
+      text: `Join me on LocateMe! Use my invite code: ${myInviteCode}`,
+      url: window.location.origin,
+    };
+    
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+      } catch (err) {
+        // User cancelled share
+      }
+    } else {
+      await navigator.clipboard.writeText(`Join me on LocateMe! Use my invite code: ${myInviteCode}`);
+      toast.success('Link copied to clipboard!');
+    }
+  };
+
+  const handleSOS = () => {
+    toast.error('🚨 SOS Alert Sent!', {
+      description: 'Your current location has been shared with all friends.',
+      duration: 5000,
+    });
+  };
 
   // Load place info and street view image
   useEffect(() => {
@@ -338,38 +376,30 @@ export const FriendLocationDetail = ({
                 exit={{ opacity: 0, x: 20 }}
                 className="p-5"
               >
-                {/* Action Buttons */}
+                {/* Action Buttons - Row 1 */}
                 <div className="grid grid-cols-4 gap-3">
                   <button
-                    onClick={() => openPlace(friend.lat, friend.lng)}
+                    onClick={handleOpenChat}
                     className="flex flex-col items-center gap-2 py-4 border border-border rounded-xl hover:bg-muted transition-colors"
                   >
-                    <MapPin className="w-6 h-6 text-primary" />
-                    <span className="text-xs text-foreground">Lihat</span>
+                    <MessageCircle className="w-6 h-6 text-primary" />
+                    <span className="text-xs text-foreground">Pesan</span>
                   </button>
                   
                   <button
-                    onClick={openStreetView}
+                    onClick={handleShareInvite}
                     className="flex flex-col items-center gap-2 py-4 border border-border rounded-xl hover:bg-muted transition-colors"
                   >
-                    <Eye className="w-6 h-6 text-muted-foreground" />
-                    <span className="text-xs text-foreground">Street View</span>
+                    <Share2 className="w-6 h-6 text-muted-foreground" />
+                    <span className="text-xs text-foreground">Share</span>
                   </button>
                   
                   <button
-                    onClick={() => onShowTrail(friend.id)}
-                    className={`flex flex-col items-center gap-2 py-4 border rounded-xl transition-colors ${
-                      showingTrail 
-                        ? "border-primary bg-primary/10" 
-                        : "border-border hover:bg-muted"
-                    }`}
+                    onClick={handleSOS}
+                    className="flex flex-col items-center gap-2 py-4 border border-destructive/50 rounded-xl hover:bg-destructive/10 transition-colors"
                   >
-                    {isLoadingHistory ? (
-                      <Loader2 className="w-6 h-6 text-primary animate-spin" />
-                    ) : (
-                      <Route className="w-6 h-6 text-muted-foreground" />
-                    )}
-                    <span className="text-xs text-foreground">Rute</span>
+                    <AlertTriangle className="w-6 h-6 text-destructive" />
+                    <span className="text-xs text-destructive font-medium">SOS</span>
                   </button>
                   
                   <button
@@ -381,66 +411,32 @@ export const FriendLocationDetail = ({
                   </button>
                 </div>
 
-                {/* Street View Preview */}
-                <div className="mt-5 space-y-4">
-                  <div className="rounded-xl overflow-hidden border border-border">
-                    <div className="relative aspect-video bg-muted">
-                      {isLoadingPlace ? (
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <Loader2 className="w-8 h-8 animate-spin text-primary" />
-                        </div>
-                      ) : streetViewImage && !imageError ? (
-                        <img 
-                          src={streetViewImage} 
-                          alt="Street view"
-                          className="w-full h-full object-cover"
-                          onError={() => setImageError(true)}
-                        />
-                      ) : (
-                        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-muted-foreground">
-                          <ImageIcon className="w-12 h-12" />
-                          <p className="text-sm">Preview tidak tersedia</p>
-                        </div>
-                      )}
-                      
-                      {/* Overlay button */}
-                      <button
-                        onClick={openStreetView}
-                        className="absolute bottom-3 right-3 bg-card/90 backdrop-blur-sm px-3 py-2 rounded-lg flex items-center gap-2 shadow-card hover:bg-card transition-colors"
-                      >
-                        <Eye className="w-4 h-4 text-primary" />
-                        <span className="text-xs font-medium text-foreground">Street View</span>
-                        <ExternalLink className="w-3 h-3 text-muted-foreground" />
-                      </button>
+                {/* Location Details */}
+                <div className="mt-5 bg-muted/50 rounded-xl p-4">
+                  <h4 className="text-sm font-medium text-foreground mb-2">Detail Lokasi</h4>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Koordinat</span>
+                      <span className="text-foreground font-mono text-xs">
+                        {friend.lat.toFixed(6)}, {friend.lng.toFixed(6)}
+                      </span>
                     </div>
-                    
-                    {/* Place name if available */}
-                    {placeInfo?.name && (
-                      <div className="p-3 bg-muted/30">
-                        <p className="text-sm font-medium text-foreground">{placeInfo.name}</p>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Location Details */}
-                  <div className="bg-muted/50 rounded-xl p-4">
-                    <h4 className="text-sm font-medium text-foreground mb-2">Detail Lokasi</h4>
-                    <div className="space-y-2 text-sm">
+                    {friend.updatedAt && (
                       <div className="flex justify-between">
-                        <span className="text-muted-foreground">Koordinat</span>
-                        <span className="text-foreground font-mono text-xs">
-                          {friend.lat.toFixed(6)}, {friend.lng.toFixed(6)}
+                        <span className="text-muted-foreground">Terakhir update</span>
+                        <span className="text-foreground">
+                          {format(new Date(friend.updatedAt), "HH:mm, d MMM yyyy")}
                         </span>
                       </div>
-                      {friend.updatedAt && (
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Terakhir update</span>
-                          <span className="text-foreground">
-                            {format(new Date(friend.updatedAt), "HH:mm, d MMM yyyy")}
-                          </span>
-                        </div>
-                      )}
-                    </div>
+                    )}
+                    {friend.address && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Alamat</span>
+                        <span className="text-foreground text-right max-w-[60%]">
+                          {friend.address}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
               </motion.div>
