@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { X, Send, Image, MapPin, Loader2 } from 'lucide-react';
+import { X, Send, Image, MapPin, Loader2, Check, CheckCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -184,10 +184,19 @@ const ChatWindow = ({ friendId, friendName, friendAvatar, onClose }: ChatWindowP
                       </div>
                     )}
 
-                    {/* Timestamp */}
-                    <p className={`text-[10px] px-4 pb-2 ${isMine ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>
-                      {format(new Date(msg.created_at), 'HH:mm', { locale: id })}
-                    </p>
+                    {/* Timestamp and read receipt */}
+                    <div className={`flex items-center gap-1 px-4 pb-2 ${isMine ? 'justify-end' : ''}`}>
+                      <p className={`text-[10px] ${isMine ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>
+                        {format(new Date(msg.created_at), 'HH:mm', { locale: id })}
+                      </p>
+                      {isMine && (
+                        msg.is_read ? (
+                          <CheckCheck className={`w-3.5 h-3.5 ${isMine ? 'text-primary-foreground/70' : 'text-muted-foreground'}`} />
+                        ) : (
+                          <Check className={`w-3.5 h-3.5 ${isMine ? 'text-primary-foreground/70' : 'text-muted-foreground'}`} />
+                        )
+                      )}
+                    </div>
                   </div>
                 </div>
               );
