@@ -12,12 +12,15 @@ import {
   Building,
   ChevronRight,
   ExternalLink,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Bell,
+  Plus
 } from "lucide-react";
 import { formatDistanceToNow, format, isToday, isYesterday } from "date-fns";
 import { id as localeId } from "date-fns/locale";
 import { useLocationHistory, LocationHistoryPoint } from "@/hooks/useLocationHistory";
 import { usePlaceInfo } from "@/hooks/usePlaceInfo";
+import { AddLocationAlert, LocationAlertList } from "@/components/LocationAlertComponents";
 
 interface FriendLocationDetailProps {
   friend: {
@@ -53,7 +56,8 @@ export const FriendLocationDetail = ({
   showingTrail,
   isLoadingHistory,
 }: FriendLocationDetailProps) => {
-  const [activeTab, setActiveTab] = useState<"location" | "history" | "places">("location");
+  const [activeTab, setActiveTab] = useState<"location" | "history" | "places" | "alerts">("location");
+  const [showAddAlert, setShowAddAlert] = useState(false);
   const [historyData, setHistoryData] = useState<LocationHistoryPoint[]>([]);
   const [placesVisited, setPlacesVisited] = useState<PlaceVisit[]>([]);
   const [isLoadingPlaces, setIsLoadingPlaces] = useState(false);
@@ -279,10 +283,10 @@ export const FriendLocationDetail = ({
         </div>
 
         {/* Tabs */}
-        <div className="flex border-b border-border px-5 flex-shrink-0">
+        <div className="flex border-b border-border px-5 flex-shrink-0 overflow-x-auto">
           <button
             onClick={() => setActiveTab("location")}
-            className={`flex-1 py-3 text-sm font-medium border-b-2 transition-colors ${
+            className={`flex-1 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
               activeTab === "location" 
                 ? "border-primary text-primary" 
                 : "border-transparent text-muted-foreground"
@@ -292,7 +296,7 @@ export const FriendLocationDetail = ({
           </button>
           <button
             onClick={() => setActiveTab("history")}
-            className={`flex-1 py-3 text-sm font-medium border-b-2 transition-colors ${
+            className={`flex-1 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
               activeTab === "history" 
                 ? "border-primary text-primary" 
                 : "border-transparent text-muted-foreground"
@@ -302,13 +306,24 @@ export const FriendLocationDetail = ({
           </button>
           <button
             onClick={() => setActiveTab("places")}
-            className={`flex-1 py-3 text-sm font-medium border-b-2 transition-colors ${
+            className={`flex-1 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
               activeTab === "places" 
                 ? "border-primary text-primary" 
                 : "border-transparent text-muted-foreground"
             }`}
           >
             Tempat
+          </button>
+          <button
+            onClick={() => setActiveTab("alerts")}
+            className={`flex-1 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap flex items-center justify-center gap-1 ${
+              activeTab === "alerts" 
+                ? "border-primary text-primary" 
+                : "border-transparent text-muted-foreground"
+            }`}
+          >
+            <Bell className="w-4 h-4" />
+            Notif
           </button>
         </div>
 
@@ -551,9 +566,55 @@ export const FriendLocationDetail = ({
                 )}
               </motion.div>
             )}
+
+            {activeTab === "alerts" && (
+              <motion.div
+                key="alerts"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                className="p-5"
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <h4 className="text-sm font-medium text-foreground">
+                    Notifikasi Lokasi
+                  </h4>
+                  <button
+                    onClick={() => setShowAddAlert(true)}
+                    className="flex items-center gap-1 text-sm text-primary font-medium hover:underline"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Tambah
+                  </button>
+                </div>
+
+                <p className="text-xs text-muted-foreground mb-4">
+                  Dapatkan notifikasi ketika {friend.name} sampai di lokasi tertentu
+                </p>
+
+                <LocationAlertList 
+                  friendId={friend.id} 
+                  friendName={friend.name}
+                />
+              </motion.div>
+            )}
           </AnimatePresence>
         </div>
       </div>
+
+      {/* Add Alert Modal */}
+      <AnimatePresence>
+        {showAddAlert && (
+          <AddLocationAlert
+            friendId={friend.id}
+            friendName={friend.name}
+            currentLat={friend.lat}
+            currentLng={friend.lng}
+            currentAddress={friend.address}
+            onClose={() => setShowAddAlert(false)}
+          />
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 };
