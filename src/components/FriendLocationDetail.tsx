@@ -154,18 +154,36 @@ export const FriendLocationDetail = ({
   };
 
   const openStreetView = () => {
-    window.open(
-      `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${friend.lat},${friend.lng}`,
-      '_blank'
-    );
+    const url = `https://maps.google.com/maps?q=&layer=c&cbll=${friend.lat},${friend.lng}`;
+    const link = document.createElement('a');
+    link.href = url;
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   const openInMaps = (lat: number, lng: number) => {
-    window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`, '_blank');
+    const url = `https://maps.google.com/maps?daddr=${lat},${lng}`;
+    const link = document.createElement('a');
+    link.href = url;
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   const openPlace = (lat: number, lng: number) => {
-    window.open(`https://www.google.com/maps/search/?api=1&query=${lat},${lng}`, '_blank');
+    const url = `https://maps.google.com/maps?q=${lat},${lng}`;
+    const link = document.createElement('a');
+    link.href = url;
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   const formatDate = (dateStr: string) => {
