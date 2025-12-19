@@ -49,11 +49,20 @@ export const useMessages = (friendId: string | null) => {
       const { data, error } = await supabase
         .from('messages')
         .select('*')
-        .or(`and(sender_id.eq.${user.id},receiver_id.eq.${friendId}),and(sender_id.eq.${friendId},receiver_id.eq.${user.id})`)
+        .or(`sender_id.eq.${user.id},sender_id.eq.${friendId}`)
+        .or(`receiver_id.eq.${user.id},receiver_id.eq.${friendId}`)
         .order('created_at', { ascending: true });
 
       if (error) throw error;
-      setMessages(data || []);
+      
+      // Filter messages for this conversation
+      const conversationMessages = (data || []).filter(
+        (msg: any) =>
+          (msg.sender_id === user.id && msg.receiver_id === friendId) ||
+          (msg.sender_id === friendId && msg.receiver_id === user.id)
+      ) as Message[];
+      
+      setMessages(conversationMessages);
       
       // Mark unread messages as read
       await supabase
